@@ -19,7 +19,7 @@ import { ReportGeneratorModal } from './components/ReportGeneratorModal';
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'calendar' | 'reconciliation' | 'analytics' | 'settings'>('calendar');
   const [currentMonth, setCurrentMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
-  const [stealthMode, setStealthMode] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
 
   // Live IndexedDB queries
@@ -76,19 +76,19 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen font-sans pb-12 transition-colors selection:bg-emerald-500 selection:text-slate-950 ${
-      stealthMode ? 'bg-black text-slate-200' : 'bg-slate-950 text-slate-100'
+    <div className={`min-h-screen font-sans pb-20 md:pb-12 transition-colors selection:bg-emerald-500 selection:text-white ${
+      isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'
     }`}>
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         combatDaysCount={milestone70k.totalCombatDays}
-        stealthMode={stealthMode}
-        setStealthMode={setStealthMode}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
         onOpenReportModal={() => setIsReportModalOpen(true)}
       />
 
-      <main className="max-w-7xl mx-auto px-4 pt-4">
+      <main className="max-w-5xl mx-auto px-4 pt-4">
         {/* KPI Summary Dashboard */}
         <Dashboard
           currentMonth={currentMonth}

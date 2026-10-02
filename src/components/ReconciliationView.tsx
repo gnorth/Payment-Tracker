@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, CheckCircle2, AlertTriangle, ArrowDownRight, Wallet, Calendar } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, AlertTriangle, Wallet } from 'lucide-react';
 import { PaymentTransaction } from '../types';
 import { formatCurrency } from '../utils/calculations';
 
@@ -24,7 +24,6 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
   const [categoryInput, setCategoryInput] = useState<PaymentTransaction['category']>('additional_reward');
   const [notesInput, setNotesInput] = useState<string>('');
 
-  // Filter transactions for selected target month
   const monthTransactions = transactions.filter((t) => t.targetMonth === currentMonth);
   const totalReceivedForMonth = monthTransactions.reduce((acc, t) => acc + t.amount, 0);
 
@@ -62,7 +61,7 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
       case 'wellness':
         return 'Оздоровчі (Грошова допомога)';
       case 'material_help':
-        return 'Матеріальна допомога (Соц-побут)';
+        return 'Матеріальна допомога';
       default:
         return 'Інша виплата';
     }
@@ -71,34 +70,34 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Monthly Audit Overview Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-        <h2 className="text-base font-bold text-slate-100 flex items-center gap-2 border-b border-slate-800 pb-3">
-          <Wallet className="w-5 h-5 text-emerald-400" />
-          Звірка Виплат за період: <span className="text-emerald-400">{currentMonth}</span>
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+        <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+          <Wallet className="w-5 h-5 text-emerald-600" />
+          Звірка Виплат за період: <span className="text-emerald-700 font-black">{currentMonth}</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-            <span className="text-xs text-slate-400 font-semibold block mb-1">Нараховано за днями:</span>
-            <span className="text-xl font-bold text-slate-100">{formatCurrency(expectedTotal)}</span>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span className="text-xs text-slate-500 font-bold block mb-1">Нараховано за днями:</span>
+            <span className="text-xl font-black text-slate-900">{formatCurrency(expectedTotal)}</span>
           </div>
 
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-            <span className="text-xs text-slate-400 font-semibold block mb-1">Фактично зараховано:</span>
-            <span className="text-xl font-bold text-blue-400">{formatCurrency(totalReceivedForMonth)}</span>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span className="text-xs text-slate-500 font-bold block mb-1">Фактично зараховано:</span>
+            <span className="text-xl font-black text-blue-700">{formatCurrency(totalReceivedForMonth)}</span>
           </div>
 
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-            <span className="text-xs text-slate-400 font-semibold block mb-1">Статус / Баланс:</span>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span className="text-xs text-slate-500 font-bold block mb-1">Статус / Баланс:</span>
             {totalReceivedForMonth === 0 ? (
-              <span className="text-sm font-bold text-slate-500">Виплати очікуються</span>
+              <span className="text-sm font-bold text-slate-400">Виплати очікуються</span>
             ) : isPaidFully ? (
-              <span className="text-sm font-bold text-emerald-400 flex items-center gap-1">
+              <span className="text-sm font-black text-emerald-700 flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4" />
                 Виплачено повністю!
               </span>
             ) : isShortfall ? (
-              <span className="text-sm font-bold text-rose-400 flex items-center gap-1">
+              <span className="text-sm font-black text-rose-700 flex items-center gap-1">
                 <AlertTriangle className="w-4 h-4" />
                 Борг частини: {formatCurrency(Math.abs(balance))}
               </span>
@@ -108,41 +107,41 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
       </div>
 
       {/* Add New Transaction Form */}
-      <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-        <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-          <Plus className="w-4 h-4 text-emerald-400" />
+      <form onSubmit={handleSubmit} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+        <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <Plus className="w-4 h-4 text-emerald-600" />
           Зафіксувати отримані кошти з банку
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 font-semibold mb-1">Дата надходження:</label>
+            <label className="block text-xs text-slate-600 font-bold mb-1">Дата надходження:</label>
             <input
               type="date"
               value={dateInput}
               onChange={(e) => setDateInput(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 font-semibold mb-1">За який місяць виплата:</label>
+            <label className="block text-xs text-slate-600 font-bold mb-1">За який місяць виплата:</label>
             <input
               type="month"
               value={targetMonthInput}
               onChange={(e) => setTargetMonthInput(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 font-semibold mb-1">Категорія надходження:</label>
+            <label className="block text-xs text-slate-600 font-bold mb-1">Категорія надходження:</label>
             <select
               value={categoryInput}
               onChange={(e) => setCategoryInput(e.target.value as any)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500"
             >
               <option value="additional_reward">Додаткова винагорода (Бойові/Спец)</option>
               <option value="base_salary">Основне ГЗ (База)</option>
@@ -154,50 +153,50 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 font-semibold mb-1">Сума (грн):</label>
+            <label className="block text-xs text-slate-600 font-bold mb-1">Сума (грн):</label>
             <input
               type="number"
               placeholder="наприклад: 33400"
               value={amountInput}
               onChange={(e) => setAmountInput(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-black focus:ring-2 focus:ring-emerald-500"
               required
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-slate-400 font-semibold mb-1">Примітка / Банк:</label>
+          <label className="block text-xs text-slate-600 font-bold mb-1">Примітка / Банк:</label>
           <input
             type="text"
             placeholder="наприклад: Приват24 / Зараховано 15:40"
             value={notesInput}
             onChange={(e) => setNotesInput(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-colors"
+          className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Додати надходження
         </button>
       </form>
 
-      {/* Transactions History Log Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-        <h3 className="text-sm font-bold text-slate-200">Історія банківських надходжень ({monthTransactions.length})</h3>
+      {/* History Log */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+        <h3 className="text-sm font-extrabold text-slate-900">Історія банківських надходжень ({monthTransactions.length})</h3>
 
         {monthTransactions.length === 0 ? (
-          <div className="text-xs text-slate-500 text-center py-6 border border-dashed border-slate-800 rounded-xl">
+          <div className="text-xs text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-xl font-medium">
             За вказаний місяць надходжень не зафіксовано.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Дата</th>
                   <th className="p-3">Категорія</th>
@@ -206,23 +205,23 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
                   <th className="p-3 text-center">Дії</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {monthTransactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-slate-800/40">
-                    <td className="p-3 font-semibold text-slate-200">{tx.date}</td>
+                  <tr key={tx.id} className="hover:bg-slate-50">
+                    <td className="p-3 font-bold text-slate-900">{tx.date}</td>
                     <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 font-medium text-slate-300">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 border border-slate-200 font-semibold text-slate-800">
                         {getCategoryLabel(tx.category)}
                       </span>
                     </td>
-                    <td className="p-3 text-slate-400">{tx.notes || '—'}</td>
-                    <td className="p-3 text-right font-bold text-emerald-400">
+                    <td className="p-3 text-slate-500">{tx.notes || '—'}</td>
+                    <td className="p-3 text-right font-black text-emerald-700 text-sm">
                       +{formatCurrency(tx.amount)}
                     </td>
                     <td className="p-3 text-center">
                       <button
                         onClick={() => tx.id && onDeleteTransaction(tx.id)}
-                        className="text-rose-400 hover:text-rose-300 p-1.5 rounded bg-rose-950/30 hover:bg-rose-900/50 transition-colors"
+                        className="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 transition-colors border border-rose-200"
                         title="Видалити запис"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Save, Download, Upload, ShieldAlert, Check } from 'lucide-react';
+import { Settings, Save, Download, Upload, Check } from 'lucide-react';
 import { FinancialProfile, DayRecord, PaymentTransaction } from '../types';
 import { db } from '../db';
 
@@ -40,7 +40,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setTimeout(() => setSaveSuccess(false), 2000);
   };
 
-  // Export database to JSON backup file
   const handleExportJSON = () => {
     const data = {
       version: 1,
@@ -68,7 +67,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     downloadAnchor.remove();
   };
 
-  // Import database from JSON backup file
   const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (e.target.files && e.target.files[0]) {
@@ -100,29 +98,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div className="space-y-6">
       {/* Profile & Base Salary Settings */}
-      <form onSubmit={handleSaveProfile} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-        <h2 className="text-base font-bold text-slate-100 flex items-center gap-2 border-b border-slate-800 pb-3">
-          <Settings className="w-5 h-5 text-emerald-400" />
+      <form onSubmit={handleSaveProfile} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+        <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+          <Settings className="w-5 h-5 text-emerald-600" />
           Налаштування тарифів та профілю
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 font-semibold mb-1">
+            <label className="block text-xs text-slate-600 font-bold mb-1">
               Базове ОГЗ (Основне грошове забезпечення):
             </label>
             <input
               type="number"
               value={baseSalaryInput}
               onChange={(e) => setBaseSalaryInput(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-emerald-700 font-black focus:ring-2 focus:ring-emerald-500"
               required
             />
-            <span className="text-[10px] text-slate-500 mt-0.5 block">Оклад + звання + вислуга (за замовчуванням ~20 100 грн)</span>
+            <span className="text-[10px] text-slate-400 mt-0.5 block font-medium">Оклад + звання + вислуга (за замовчуванням ~20 100 грн)</span>
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 font-semibold mb-1">
+            <label className="block text-xs text-slate-600 font-bold mb-1">
               Звання (опціонально):
             </label>
             <input
@@ -130,12 +128,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               placeholder="наприклад: Молодший сержант"
               value={rankInput}
               onChange={(e) => setRankInput(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 font-semibold mb-1">
+            <label className="block text-xs text-slate-600 font-bold mb-1">
               Посада (опціонально):
             </label>
             <input
@@ -143,14 +141,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               placeholder="наприклад: Командир відділення"
               value={positionInput}
               onChange={(e) => setPositionInput(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500"
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition-colors"
+          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs flex items-center gap-2 transition-colors"
         >
           {saveSuccess ? <Check className="w-4 h-4 text-emerald-200" /> : <Save className="w-4 h-4" />}
           {saveSuccess ? 'Збережено!' : 'Зберегти налаштування'}
@@ -158,27 +156,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       </form>
 
       {/* Backup & Offline Data Export/Import */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-        <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-          <Download className="w-4 h-4 text-amber-400" />
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+        <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+          <Download className="w-4 h-4 text-amber-600" />
           Резервне копіювання даних (Backup / Restore)
         </h3>
 
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="text-xs text-slate-600 leading-relaxed font-medium">
           Усі ваші дані зберігаються <strong>виключно на цьому пристрої</strong> (Local Storage / IndexedDB). Ви можете зберегти резервну копію у файл JSON, щоб не втратити записи при зміні смартфона чи очищенні браузера.
         </p>
 
         <div className="flex flex-wrap gap-3 pt-2">
           <button
             onClick={handleExportJSON}
-            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors shadow-sm"
+            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors shadow-2xs"
           >
-            <Download className="w-4 h-4 text-emerald-400" />
+            <Download className="w-4 h-4 text-emerald-600" />
             Завантажити файл резервної копії (.json)
           </button>
 
-          <label className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
-            <Upload className="w-4 h-4 text-amber-400" />
+          <label className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors shadow-2xs cursor-pointer">
+            <Upload className="w-4 h-4 text-amber-600" />
             Відновити з файлу (.json)
             <input
               type="file"
