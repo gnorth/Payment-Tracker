@@ -1,6 +1,8 @@
 import React from 'react';
-import { Wallet, AlertTriangle, CheckCircle2, Award, TrendingUp, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Award, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { formatCurrency } from '../utils/calculations';
+import { subMonths, addMonths, format } from 'date-fns';
+import { uk } from 'date-fns/locale';
 
 interface DashboardProps {
   currentMonth: string; // YYYY-MM
@@ -23,112 +25,118 @@ export const Dashboard: React.FC<DashboardProps> = ({
   combatDaysInMonth,
   totalCombatDays
 }) => {
+  const [yearStr, monthStr] = currentMonth.split('-');
+  const monthDate = new Date(Number(yearStr), Number(monthStr) - 1, 1);
+
   const balance = receivedTotal - expectedTotal;
   const isFullyPaid = balance >= 0 && receivedTotal > 0;
   const isShortfall = balance < 0 && receivedTotal > 0;
 
   const currentCycleDays = totalCombatDays % 30;
+  const daysRemaining70k = 30 - currentCycleDays;
   const progressPercent = Math.min(100, Math.round((currentCycleDays / 30) * 100));
 
+  const handlePrev = () => {
+    setCurrentMonth(format(subMonths(monthDate, 1), 'yyyy-MM'));
+  };
+
+  const handleNext = () => {
+    setCurrentMonth(format(addMonths(monthDate, 1), 'yyyy-MM'));
+  };
+
   return (
-    <div className="space-y-4 mb-6">
-      {/* Month Selector bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200/80 p-3.5 rounded-2xl shadow-xs">
+    <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-100 mb-4 space-y-4">
+      {/* Month Navigator & Status Header */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CalendarIcon className="w-5 h-5 text-emerald-600" />
-          <span className="text-sm font-bold text-slate-800">Період обліку:</span>
+          <button
+            onClick={handlePrev}
+            className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <span className="text-sm font-bold text-slate-900 capitalize">
+            {format(monthDate, 'LLLL yyyy', { locale: uk })}
+          </span>
+
+          <button
+            onClick={handleNext}
+            className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
-        <input
-          type="month"
-          value={currentMonth}
-          onChange={(e) => setCurrentMonth(e.target.value)}
-          className="bg-slate-50 border border-slate-300 text-slate-900 text-sm font-extrabold px-3 py-1.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
-        />
+
+        {/* Status Badge */}
+        {receivedTotal === 0 ? (
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+            Очікує виплати
+          </span>
+        ) : isFullyPaid ? (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Виплачено
+          </span>
+        ) : isShortfall ? (
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+            <AlertCircle className="w-3.5 h-3.5" />
+            Недоплата: {formatCurrency(Math.abs(balance))}
+          </span>
+        ) : null}
       </div>
 
-      {/* Main KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Card 1: Expected Amount */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs uppercase tracking-wider font-bold text-slate-400">
-                Очікується за місяць
-              </span>
-              <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-                <TrendingUp className="w-4 h-4" />
-              </div>
+      {/* Main Hero Amount */}
+      <div>
+        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-0.5">
+          Очікуване нарахування
+        </div>
+        <div className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          {formatCurrency(expectedTotal)}
+        </div>
+      </div>
+
+      {/* Key breakdown line */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs pt-1 border-t border-slate-100">
+        <div className="text-slate-500">
+          База ОГЗ: <strong className="text-slate-800 font-bold">{formatCurrency(baseSalary)}</strong>
+        </div>
+        <span className="text-slate-300">•</span>
+        <div className="text-slate-500">
+          Додаткова: <strong className="text-emerald-700 font-bold">+{formatCurrency(additionalRewards)}</strong> ({combatDaysInMonth} дн.)
+        </div>
+        {receivedTotal > 0 && (
+          <>
+            <span className="text-slate-300">•</span>
+            <div className="text-slate-500">
+              Зайшло: <strong className="text-blue-700 font-bold">{formatCurrency(receivedTotal)}</strong>
             </div>
-            <div className="text-2xl font-black text-slate-900 mb-1">
-              {formatCurrency(expectedTotal)}
-            </div>
-          </div>
-          <div className="text-xs text-slate-500 flex items-center gap-2 pt-2 border-t border-slate-100">
-            <span>База: <strong className="text-slate-800 font-bold">{formatCurrency(baseSalary)}</strong></span>
-            <span>•</span>
-            <span>Додаткова: <strong className="text-emerald-700 font-bold">{formatCurrency(additionalRewards)}</strong></span>
-          </div>
+          </>
+        )}
+      </div>
+
+      {/* 70k Milestone Mini Progress Bar */}
+      <div className="pt-2 bg-amber-50/60 p-3 rounded-2xl border border-amber-100">
+        <div className="flex items-center justify-between text-xs mb-1.5">
+          <span className="font-bold text-amber-950 flex items-center gap-1.5">
+            <Award className="w-4 h-4 text-amber-600" />
+            Виплата 70 000 грн за «нуль»
+          </span>
+          <span className="font-extrabold text-amber-900">
+            {currentCycleDays} / 30 днів
+          </span>
         </div>
 
-        {/* Card 2: Actually Received */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs uppercase tracking-wider font-bold text-slate-400">
-                Фактично Отримано
-              </span>
-              <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-                <Wallet className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl font-black text-slate-900 mb-1">
-              {formatCurrency(receivedTotal)}
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-slate-100">
-            {receivedTotal === 0 ? (
-              <div className="text-xs text-slate-400 font-medium">Виплати за цей місяць ще очікуються</div>
-            ) : isFullyPaid ? (
-              <div className="text-xs text-emerald-700 font-bold flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Виплачено повністю!</span>
-              </div>
-            ) : isShortfall ? (
-              <div className="text-xs text-rose-700 font-bold flex items-center gap-1 bg-rose-50 px-2 py-1 rounded-lg border border-rose-200">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>Недоплата: {formatCurrency(Math.abs(balance))}</span>
-              </div>
-            ) : null}
-          </div>
+        <div className="w-full bg-amber-100/80 h-2 rounded-full overflow-hidden">
+          <div
+            className="bg-amber-500 h-full rounded-full transition-all duration-500"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
 
-        {/* Card 3: 70k Milestone Widget */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs uppercase tracking-wider font-bold text-amber-800 flex items-center gap-1">
-                <Award className="w-4 h-4 text-amber-600" />
-                Виплата 70 000 грн (30 днів)
-              </span>
-              <span className="text-xs font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
-                {currentCycleDays} / 30 дн.
-              </span>
-            </div>
-            
-            {/* Progress bar */}
-            <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200 mb-2">
-              <div
-                className="bg-amber-500 h-full rounded-full transition-all duration-500 shadow-xs"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="text-xs text-slate-500 flex items-center justify-between pt-2 border-t border-slate-100">
-            <span>У цьому місяці на нулі: <strong className="text-slate-800 font-bold">{combatDaysInMonth} дн.</strong></span>
-            <span>Всього: <strong className="text-amber-800 font-bold">{totalCombatDays} дн.</strong></span>
-          </div>
+        <div className="text-[11px] text-amber-800/80 mt-1 flex justify-between">
+          <span>{currentCycleDays > 0 ? `Залишилось: ${daysRemaining70k} дн.` : 'Початок нового циклу'}</span>
+          <span>Всього бойових: <strong>{totalCombatDays} дн.</strong></span>
         </div>
       </div>
     </div>

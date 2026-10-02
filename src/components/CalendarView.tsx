@@ -8,10 +8,20 @@ import {
   parseISO,
   subMonths,
   addMonths,
-  eachDayOfInterval as getRangeDays
+  isToday,
+  isSameDay
 } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Check, MessageSquare, CheckCircle, Layers, Sparkles } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  Trash2,
+  CalendarRange,
+  X,
+  FileCheck,
+  Check
+} from 'lucide-react';
 import { DayRecord, PayoutCategory, DEFAULT_CATEGORIES } from '../types';
 import { getDailyRateForMonth, formatCurrency } from '../utils/calculations';
 
@@ -34,22 +44,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onBatchSaveRecords,
   categories = DEFAULT_CATEGORIES
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('combat_100k');
-  const [activeDay, setActiveDay] = useState<string | null>(null);
-  const [notesInput, setNotesInput] = useState<string>('');
-  const [orderInput, setOrderInput] = useState<string>('');
-  const [isPaidOutInput, setIsPaidOutInput] = useState<boolean>(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState<string>('');
+  const [orderNumber, setOrderNumber] = useState<string>('');
+  const [isPaidOut, setIsPaidOut] = useState<boolean>(false);
+  const [showNoteInput, setShowNoteInput] = useState<boolean>(false);
 
-  // Range selection state
-  const [showRangeSelector, setShowRangeSelector] = useState<boolean>(false);
-  const [rangeStart, setRangeStart] = useState<string>('');
-  const [rangeEnd, setRangeEnd] = useState<string>('');
-  const [rangeOrderNumber, setRangeOrderNumber] = useState<string>('');
+  // Range mode (tap start date, tap end date)
+  const [isRangeMode, setIsRangeMode] = useState<boolean>(false);
+  const [rangeStart, setRangeStart] = useState<string | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
 
-  // Parse month dates
+  // Month date calculations
   const [yearStr, monthStr] = currentMonth.split('-');
   const monthDate = new Date(Number(yearStr), Number(monthStr) - 1, 1);
-
   const monthStart = startOfMonth(monthDate);
   const monthEnd = endOfMonth(monthDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -57,6 +65,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
   const firstDayIndex = (getDay(monthStart) + 6) % 7;
 
+  // Record lookup map
   const recordMap = new Map<string, DayRecord>();
   dayRecords.forEach((r) => recordMap.set(r.date, r));
 
@@ -66,213 +75,241 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const handlePrevMonth = () => {
     const prev = subMonths(monthDate, 1);
     setCurrentMonth(format(prev, 'yyyy-MM'));
+    setSelectedDay(null);
   };
 
   const handleNextMonth = () => {
     const next = addMonths(monthDate, 1);
     setCurrentMonth(format(next, 'yyyy-MM'));
+    setSelectedDay(null);
   };
 
+  // Day click logic
   const handleDayClick = (dateStr: string) => {
-    const existing = recordMap.get(dateStr);
-
-    if (activeDay === dateStr) {
-      setActiveDay(null);
+    if (isRangeMode) {
+      if (!rangeStart || (rangeStart && rangeEnd)) {
+        setRangeStart(dateStr);
+        setRangeEnd(null);
+      } else {
+        // We have start, setting end
+        if (dateStr < rangeStart) {
+          setRangeEnd(rangeStart);
+          setRangeStart(dateStr);
+        } else {
+          setRangeEnd(dateStr);
+        }
+      }
       return;
     }
 
-    const newRecord: DayRecord = {
-      date: dateStr,
-      typeId: selectedCategory,
-      notes: existing?.notes || '',
-      orderNumber: existing?.orderNumber || '',
-      isPaidOut: existing?.isPaidOut || false
-    };
-
-    onSaveDayRecord(newRecord);
-    setActiveDay(dateStr);
-    setNotesInput(existing?.notes || '');
-    setOrderInput(existing?.orderNumber || '');
-    setIsPaidOutInput(existing?.isPaidOut || false);
+    // Normal mode: select day for inspector
+    setSelectedDay(dateStr);
+    const existing = recordMap.get(dateStr);
+    setNoteText(existing?.notes || '');
+    setOrderNumber(existing?.orderNumber || '');
+    setIsPaidOut(existing?.isPaidOut || false);
+    setShowNoteInput(Boolean(existing?.notes || existing?.orderNumber));
   };
 
-  const handleSaveDetails = () => {
-    if (!activeDay) return;
-    const existing = recordMap.get(activeDay);
-    if (!existing) return;
+  // Apply category to single day
+  const handleApplyCategory = (catId: string) => {
+    if (!selectedDay) return;
+    const existing = recordMap.get(selectedDay);
 
     onSaveDayRecord({
-      ...existing,
-      notes: notesInput,
-      orderNumber: orderInput,
-      isPaidOut: isPaidOutInput
+      date: selectedDay,
+      typeId: catId,
+      notes: noteText,
+      orderNumber: orderNumber,
+      isPaidOut: isPaidOut
     });
-    setActiveDay(null);
   };
 
-  const handleClearDay = (dateStr: string) => {
-    onDeleteDayRecord(dateStr);
-    if (activeDay === dateStr) {
-      setActiveDay(null);
-    }
-  };
-
-  const handleApplyRange = () => {
+  // Apply category to range
+  const handleApplyRangeCategory = (catId: string) => {
     if (!rangeStart || !rangeEnd) return;
-    const startDate = parseISO(rangeStart);
-    const endDate = parseISO(rangeEnd);
 
-    if (startDate > endDate) {
-      alert('Дата початку не може бути пізніше дати кінця!');
-      return;
-    }
+    const start = parseISO(rangeStart);
+    const end = parseISO(rangeEnd);
+    const days = eachDayOfInterval({ start, end });
 
-    const intervalDays = getRangeDays({ start: startDate, end: endDate });
-    const newRecords: DayRecord[] = intervalDays.map((d) => {
+    const newRecords: DayRecord[] = days.map((d) => {
       const dateStr = format(d, 'yyyy-MM-dd');
       const existing = recordMap.get(dateStr);
       return {
         date: dateStr,
-        typeId: selectedCategory,
+        typeId: catId,
         notes: existing?.notes || '',
-        orderNumber: rangeOrderNumber || existing?.orderNumber || '',
+        orderNumber: orderNumber || existing?.orderNumber || '',
         isPaidOut: existing?.isPaidOut || false
       };
     });
 
     onBatchSaveRecords(newRecords);
-    setShowRangeSelector(false);
-    setRangeStart('');
-    setRangeEnd('');
-    setRangeOrderNumber('');
+    setIsRangeMode(false);
+    setRangeStart(null);
+    setRangeEnd(null);
+    setOrderNumber('');
+  };
+
+  const handleClearSelectedDay = () => {
+    if (!selectedDay) return;
+    onDeleteDayRecord(selectedDay);
+    setNoteText('');
+    setOrderNumber('');
+    setIsPaidOut(false);
+  };
+
+  const activeRecord = selectedDay ? recordMap.get(selectedDay) : null;
+  const activeCategory = activeRecord ? categoryMap.get(activeRecord.typeId) : null;
+  const activeRate = activeCategory
+    ? activeRecord?.customRate ?? getDailyRateForMonth(activeCategory, currentMonth)
+    : 0;
+
+  // Visual helper for range highlight
+  const isInRange = (dateStr: string) => {
+    if (!rangeStart || !rangeEnd) return dateStr === rangeStart;
+    return dateStr >= rangeStart && dateStr <= rangeEnd;
+  };
+
+  // Color mapper for clean minimal day bubbles
+  const getCategoryStyles = (typeId?: string) => {
+    switch (typeId) {
+      case 'combat_100k':
+        return 'bg-rose-50 text-rose-700 border-rose-300 font-bold';
+      case 'special_50k':
+        return 'bg-amber-50 text-amber-800 border-amber-300 font-bold';
+      case 'duty_30k':
+        return 'bg-yellow-50 text-yellow-800 border-yellow-300 font-bold';
+      case 'sick_100k':
+        return 'bg-purple-50 text-purple-700 border-purple-300 font-bold';
+      case 'base_day':
+        return 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold';
+      case 'vacation':
+        return 'bg-sky-50 text-sky-800 border-sky-300 font-semibold';
+      case 'training':
+        return 'bg-teal-50 text-teal-800 border-teal-300 font-semibold';
+      default:
+        return 'bg-white text-slate-700 border-slate-100 hover:bg-slate-50';
+    }
+  };
+
+  const getCategoryDot = (typeId?: string) => {
+    switch (typeId) {
+      case 'combat_100k':
+        return 'bg-rose-500';
+      case 'special_50k':
+        return 'bg-amber-500';
+      case 'duty_30k':
+        return 'bg-yellow-500';
+      case 'sick_100k':
+        return 'bg-purple-500';
+      case 'base_day':
+        return 'bg-emerald-500';
+      case 'vacation':
+        return 'bg-sky-500';
+      case 'training':
+        return 'bg-teal-500';
+      default:
+        return null;
+    }
   };
 
   return (
     <div className="space-y-4">
-      {/* Category Stamp Palette & Range Selector */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-          <div className="text-xs uppercase tracking-wider font-bold text-slate-500">
-            Оберіть тип виплати (Штамп дня):
+      {/* Calendar Card */}
+      <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-slate-100">
+        {/* Month Header & Controls */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 capitalize tracking-tight">
+              {format(monthDate, 'LLLL yyyy', { locale: uk })}
+            </h2>
+            <p className="text-xs text-slate-400 font-medium">
+              {isRangeMode ? 'Оберіть початковий і кінцевий день' : 'Торкніться дня для перегляду та налаштування'}
+            </p>
           </div>
-          <button
-            onClick={() => setShowRangeSelector(!showRangeSelector)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border ${
-              showRangeSelector
-                ? 'bg-amber-100 text-amber-900 border-amber-300'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Масове відмічання днів</span>
-          </button>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                setIsRangeMode(!isRangeMode);
+                setRangeStart(null);
+                setRangeEnd(null);
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                isRangeMode
+                  ? 'bg-amber-100 text-amber-900 border border-amber-300 font-bold'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
+              title="Виділити період кількох днів"
+            >
+              <CalendarRange className="w-4 h-4" />
+              <span className="hidden sm:inline">Період</span>
+            </button>
+
+            <button
+              onClick={handlePrevMonth}
+              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={handleNextMonth}
+              className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Range Selector Drawer */}
-        {showRangeSelector && (
-          <div className="bg-slate-50 border border-amber-200 p-4 rounded-xl space-y-3 shadow-xs">
-            <h4 className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-amber-600" />
-              Швидке нанесення типу виплати на період днів
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] text-slate-600 font-bold mb-1">З дати:</label>
-                <input
-                  type="date"
-                  value={rangeStart}
-                  onChange={(e) => setRangeStart(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">По дату:</label>
-                <input
-                  type="date"
-                  value={rangeEnd}
-                  onChange={(e) => setRangeEnd(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Бойове Розпорядження (БР №):</label>
-                <input
-                  type="text"
-                  placeholder="наприклад: БР №12/2026"
-                  value={rangeOrderNumber}
-                  onChange={(e) => setRangeOrderNumber(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:ring-2 focus:ring-amber-500"
-                />
-              </div>
+        {/* Range mode helper banner */}
+        {isRangeMode && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-2xl flex flex-wrap items-center justify-between gap-2">
+            <div className="text-xs text-amber-900 font-medium">
+              {rangeStart && !rangeEnd && (
+                <span>Початок: <strong>{rangeStart}</strong>. Тепер виберіть день закінчення.</span>
+              )}
+              {rangeStart && rangeEnd && (
+                <span>Діапазон: <strong>{rangeStart}</strong> — <strong>{rangeEnd}</strong></span>
+              )}
+              {!rangeStart && <span>Оберіть перший день діапазону в календарі</span>}
             </div>
-            <button
-              onClick={handleApplyRange}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5"
-            >
-              <Check className="w-4 h-4" />
-              Застосувати штамп до вказаних днів
-            </button>
+
+            {rangeStart && rangeEnd && (
+              <div className="flex flex-wrap items-center gap-1.5 w-full pt-1">
+                <span className="text-xs font-bold text-amber-900">Застосувати:</span>
+                {categories.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleApplyRangeCategory(c.id)}
+                    className="px-2.5 py-1 text-xs font-bold rounded-lg bg-white border border-amber-300 text-amber-950 hover:bg-amber-100 shadow-2xs"
+                  >
+                    {c.shortName}
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setIsRangeMode(false);
+                    setRangeStart(null);
+                    setRangeEnd(null);
+                  }}
+                  className="p-1 text-slate-400 hover:text-slate-700 ml-auto"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Scrollable Category Stamps (Mobile Thumb Palette) */}
-        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {categories.map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            const rate = getDailyRateForMonth(cat, currentMonth);
-
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold border shrink-0 transition-all active:scale-95 ${
-                  cat.color
-                } ${
-                  isSelected
-                    ? 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-white scale-105 shadow-xs font-black'
-                    : 'opacity-90 hover:opacity-100'
-                }`}
-              >
-                <span>{cat.shortName}</span>
-                {rate > 0 && (
-                  <span className="text-[10px] bg-white/60 px-1.5 py-0.5 rounded border border-black/5">
-                    ~{Math.round(rate)} ₴/дн
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Calendar Navigation & Grid */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={handlePrevMonth}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          <h2 className="text-base font-extrabold text-slate-900 capitalize">
-            {format(monthDate, 'LLLL yyyy', { locale: uk })}
-          </h2>
-
-          <button
-            onClick={handleNextMonth}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Days of Week */}
-        <div className="grid grid-cols-7 gap-1.5 mb-2 text-center">
+        {/* Days of week header */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center">
           {weekDays.map((day, idx) => (
             <div
               key={day}
-              className={`text-xs font-bold py-1 ${
+              className={`text-xs font-semibold py-1 ${
                 idx >= 5 ? 'text-rose-500' : 'text-slate-400'
               }`}
             >
@@ -281,141 +318,223 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           ))}
         </div>
 
-        {/* Days Grid */}
-        <div className="grid grid-cols-7 gap-1.5">
+        {/* Calendar Grid (Clean, thumb-friendly squares) */}
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {Array.from({ length: firstDayIndex }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-16 sm:h-22 bg-slate-100/50 rounded-xl border border-slate-100" />
+            <div key={`empty-${i}`} className="aspect-square rounded-2xl" />
           ))}
 
           {daysInMonth.map((day) => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const record = recordMap.get(dateStr);
-            const category = record ? categoryMap.get(record.typeId) : null;
-            const isActive = activeDay === dateStr;
-            const rate = category ? record?.customRate ?? getDailyRateForMonth(category, currentMonth) : 0;
+            const isSelected = selectedDay === dateStr;
+            const inRange = isRangeMode && isInRange(dateStr);
+            const isCurrentDay = isToday(day);
+            const dotColor = getCategoryDot(record?.typeId);
 
             return (
-              <div
+              <button
                 key={dateStr}
                 onClick={() => handleDayClick(dateStr)}
-                className={`h-16 sm:h-22 p-1.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all relative overflow-hidden select-none active:scale-95 ${
-                  category
-                    ? `${category.color} border-slate-300 shadow-2xs`
-                    : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800'
-                } ${isActive ? 'ring-2 ring-emerald-500 z-10' : ''}`}
+                className={`aspect-square rounded-2xl border flex flex-col items-center justify-center relative transition-all active:scale-90 ${
+                  inRange
+                    ? 'bg-amber-200 border-amber-400 text-amber-950 font-bold scale-95'
+                    : getCategoryStyles(record?.typeId)
+                } ${
+                  isSelected
+                    ? 'ring-2 ring-slate-900 ring-offset-2 ring-offset-white font-black z-10 scale-105'
+                    : ''
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-800">
-                    {format(day, 'd')}
+                {/* Day number */}
+                <span
+                  className={`text-xs sm:text-sm ${
+                    isCurrentDay && !record?.typeId
+                      ? 'w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold'
+                      : ''
+                  }`}
+                >
+                  {format(day, 'd')}
+                </span>
+
+                {/* Minimal dot indicator for category */}
+                {dotColor && (
+                  <span className={`w-1.5 h-1.5 rounded-full ${dotColor} mt-0.5`} />
+                )}
+
+                {/* Tiny check indicator if paid */}
+                {record?.isPaidOut && (
+                  <span className="absolute top-1 right-1 text-emerald-600">
+                    <CheckCircle2 className="w-2.5 h-2.5" />
                   </span>
-
-                  {record?.isPaidOut && (
-                    <span className="text-[10px] text-emerald-800 bg-emerald-100 border border-emerald-300 rounded px-1 flex items-center gap-0.5 font-bold" title="Виплату проведено">
-                      <CheckCircle className="w-2.5 h-2.5" />
-                      ✓✓
-                    </span>
-                  )}
-                </div>
-
-                {category ? (
-                  <div className="my-auto">
-                    <div className="text-[10px] sm:text-xs font-extrabold truncate">
-                      {category.shortName}
-                    </div>
-                    {rate > 0 && (
-                      <div className="text-[9px] opacity-80 font-mono font-bold">
-                        +{Math.round(rate)} ₴
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-[9px] text-slate-400 text-center my-auto font-medium">
-                    порожньо
-                  </div>
                 )}
-
-                {(record?.notes || record?.orderNumber) && (
-                  <div className="text-[9px] text-amber-900 bg-amber-100 border border-amber-200 px-1 py-0.5 rounded truncate flex items-center gap-1 font-semibold">
-                    <MessageSquare className="w-2.5 h-2.5 shrink-0" />
-                    <span className="truncate">{record.orderNumber || record.notes}</span>
-                  </div>
-                )}
-              </div>
+              </button>
             );
           })}
         </div>
+
+        {/* Legend / Quick Status Reference */}
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-4 mt-2 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span>100к (Нуль)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <span>50к (Штаб)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span>30к (ЗБД)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>Базовий</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-sky-500" />
+            <span>Відпустка</span>
+          </div>
+        </div>
       </div>
 
-      {/* Selected Day Details Panel */}
-      {activeDay && (
-        <div className="bg-white border border-emerald-300 rounded-2xl p-4 shadow-md space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h3 className="text-sm font-bold text-emerald-800 flex items-center gap-2">
-              Редагування дня: {activeDay}
-            </h3>
-            <button
-              onClick={() => handleClearDay(activeDay)}
-              className="text-xs text-rose-700 hover:text-rose-800 bg-rose-50 border border-rose-200 px-2 py-1 rounded-lg font-semibold"
-            >
-              Очистити день
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Selected Day Inspector (Sleek, bottom sheet style card) */}
+      {selectedDay && (
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          {/* Day Title & Current Status */}
+          <div className="flex items-start justify-between">
             <div>
-              <label className="block text-xs text-slate-600 font-bold mb-1">
-                Бойове Розпорядження / Наказ (БР №):
-              </label>
-              <input
-                type="text"
-                placeholder="наприклад: БР №14/2026"
-                value={orderInput}
-                onChange={(e) => setOrderInput(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500"
-              />
+              <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                Обраний день
+              </div>
+              <h3 className="text-base font-bold text-slate-900 capitalize">
+                {format(parseISO(selectedDay), 'EEEE, d MMMM', { locale: uk })}
+              </h3>
             </div>
 
-            <div>
-              <label className="block text-xs text-slate-600 font-bold mb-1">
-                Примітки / Сектор / Завдання:
-              </label>
-              <input
-                type="text"
-                placeholder="наприклад: НП Північний"
-                value={notesInput}
-                onChange={(e) => setNotesInput(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-emerald-500"
-              />
+            {activeCategory ? (
+              <div className="text-right">
+                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
+                  {activeCategory.name}
+                </span>
+                {activeRate > 0 && (
+                  <div className="text-xs font-extrabold text-emerald-700 mt-0.5">
+                    +{formatCurrency(activeRate)}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400 font-medium py-1">
+                Тип не вибрано
+              </span>
+            )}
+          </div>
+
+          {/* Quick-action category chips */}
+          <div>
+            <div className="text-xs font-semibold text-slate-600 mb-2">
+              Встановити статус дня в 1 дотик:
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {categories.map((cat) => {
+                const isActive = activeRecord?.typeId === cat.id;
+                const rate = getDailyRateForMonth(cat, currentMonth);
+
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleApplyCategory(cat.id)}
+                    className={`p-2.5 rounded-2xl border text-left transition-all active:scale-95 flex flex-col justify-between ${
+                      isActive
+                        ? 'border-slate-900 bg-slate-900 text-white font-bold shadow-xs'
+                        : `${cat.color} border-slate-200 font-medium`
+                    }`}
+                  >
+                    <div className="text-xs font-bold leading-tight truncate">
+                      {cat.shortName}
+                    </div>
+                    {rate > 0 && (
+                      <div className={`text-[10px] mt-1 ${isActive ? 'text-slate-300' : 'text-slate-500 font-mono'}`}>
+                        +{Math.round(rate)} ₴
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-1">
-            <input
-              type="checkbox"
-              id="isPaidOut"
-              checked={isPaidOutInput}
-              onChange={(e) => setIsPaidOutInput(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-            />
-            <label htmlFor="isPaidOut" className="text-xs font-bold text-slate-800 cursor-pointer">
-              Виплату за цей день уже отримано (зафіксовано фіно)
-            </label>
-          </div>
+          {/* Note & Order Number Toggle */}
+          <div className="pt-2 border-t border-slate-100 space-y-3">
+            {!showNoteInput ? (
+              <button
+                onClick={() => setShowNoteInput(true)}
+                className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1.5"
+              >
+                <FileCheck className="w-3.5 h-3.5" />
+                <span>+ Додати номер Бойового Розпорядження (БР) чи примітку</span>
+              </button>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="№ Бойового Розпорядження (БР)"
+                    value={orderNumber}
+                    onChange={(e) => setOrderNumber(e.target.value)}
+                    onBlur={() => {
+                      if (activeRecord) {
+                        onSaveDayRecord({ ...activeRecord, orderNumber });
+                      }
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Примітка (сектор, позиція)"
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    onBlur={() => {
+                      if (activeRecord) {
+                        onSaveDayRecord({ ...activeRecord, notes: noteText });
+                      }
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+            )}
 
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              onClick={() => setActiveDay(null)}
-              className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800 font-semibold"
-            >
-              Скасувати
-            </button>
-            <button
-              onClick={handleSaveDetails}
-              className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1"
-            >
-              <Check className="w-4 h-4" />
-              Зберегти примітки
-            </button>
+            {/* Paid status toggle & Clear Day */}
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={isPaidOut}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsPaidOut(checked);
+                    if (activeRecord) {
+                      onSaveDayRecord({ ...activeRecord, isPaidOut: checked });
+                    }
+                  }}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                />
+                <span>Виплачено фіно ✓</span>
+              </label>
+
+              {activeRecord && (
+                <button
+                  onClick={handleClearSelectedDay}
+                  className="text-xs text-rose-600 hover:text-rose-700 font-medium flex items-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Очистити день</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

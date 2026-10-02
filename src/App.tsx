@@ -88,7 +88,7 @@ export const App: React.FC = () => {
         onOpenReportModal={() => setIsReportModalOpen(true)}
       />
 
-      <main className="max-w-5xl mx-auto px-4 pt-4">
+      <main className="max-w-xl mx-auto px-3 sm:px-4 pt-3 sm:pt-4">
         {/* KPI Summary Dashboard */}
         <Dashboard
           currentMonth={currentMonth}
