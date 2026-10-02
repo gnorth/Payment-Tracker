@@ -5,18 +5,22 @@ import {
   ShieldCheck,
   Award,
   AlertTriangle,
+  Flame,
+  Crosshair,
+  UserPlus,
   HeartPulse,
   Banknote,
   FileText,
   ChevronDown,
   ChevronUp,
   ExternalLink,
-  Phone
+  Phone,
+  Clock
 } from 'lucide-react';
 
 interface GuideSection {
   id: string;
-  category: 'combat' | 'general' | 'health' | 'annual' | 'action';
+  category: 'zonal' | 'assault' | 'combat' | 'general' | 'health' | 'annual' | 'action';
   title: string;
   badge: string;
   badgeColor: string;
@@ -29,187 +33,224 @@ interface GuideSection {
 
 const GUIDE_DATA: GuideSection[] = [
   {
-    id: 'combat_100k',
-    category: 'combat',
-    title: 'Додаткова винагорода 100 000 грн («Бойові / на нулі»)',
-    badge: '100 000 грн/міс',
-    badgeColor: 'bg-rose-100 text-rose-800 border-rose-200',
-    amount: '~3 333 грн / день (30 дн.) або ~3 225 грн / день (31 дн.)',
-    summary: 'Виплачується військовослужбовцям, які беруть безпосередню участь у бойових діях на лінії бойового зіткнення на глибину ротних опорних пунктів першого ешелону.',
+    id: 'zone_170k',
+    category: 'zonal',
+    title: 'Зональна винагорода 170 000 грн (ВОП / Наступ / ТОТ / Сіра зона)',
+    badge: '170 000 грн/міс',
+    badgeColor: 'bg-red-100 text-red-900 border-red-300 font-extrabold',
+    amount: '~5 666 грн / день (30 дн.) або ~5 483 грн / день (31 дн.)',
+    summary: 'Введена з червня 2026 року: прив’язана до відстані від лінії зіткнення — за завдання на відстані до взводного опорного пункту (ВОП) включно, наступ, сіру зону та ТОТ.',
     details: [
-      'Виплата нараховується пропорційно кількості днів фактичного виконання бойових завдань за звітний місяць.',
-      'Охоплює ведення бойових дій на передовій, вогневе ураження противника, розвідку на лінії зіткнення, відбиття штурмів, розмінування під вогнем.',
-      'Виплачується щомісяця у поточному місяці за попередній (зазвичай у 10-20 числах разом із грошовим забезпеченням).'
+      'Виплачується за виконання завдань на лінії бойового зіткнення на відстані до взводного опорного пункту (ВОП) включно.',
+      'Поширюється на участь у наступі, контрнаступі, контратаці.',
+      'Діє при виконанні завдань на тимчасово окупованій території України (ТОТ), у «сірій» зоні та на території противника.',
+      'Нараховується пропорційно кількості фактичних днів перебування у відповідній зоні.'
     ],
     documents: [
-      'Бойовий наказ (БО) або Бойове розпорядження (БР)',
-      'Журнал бойових дій (ЖБД) або підсумкове бойове донесення',
-      'Рапорт командира підрозділу про виконання завдань',
+      'Бойове розпорядження (БР) із зазначенням координат рубежів/ВОП',
+      'Журнал бойових дій (ЖБД) або бойове донесення',
       'Наказ командира військової частини по стройовій частині'
     ],
-    normativeBase: 'Постанова КМУ №168 від 28.02.2022, Наказ МОУ №260 від 07.06.2018'
+    normativeBase: 'Офіційне роз’яснення МОУ (серпень 2026), наказ МОУ про нову систему бойових виплат'
   },
   {
-    id: 'bonus_70k',
-    category: 'combat',
-    title: 'Одноразова винагорода 70 000 грн (за кожні 30 днів на передовій)',
-    badge: '70 000 грн одноразово',
-    badgeColor: 'bg-amber-100 text-amber-900 border-amber-300 font-bold',
-    amount: '70 000 грн за кожні сумарні 30 днів на першій лінії',
-    summary: 'Нова виплата (запроваджена з квітня 2024 року) за безпосереднє перебування на лінії зіткнення з противником на відстані першого ешелону або на території ворога.',
+    id: 'assault_daily',
+    category: 'assault',
+    title: 'Добові за штурм та активні бойові дії (20 000 – 40 000 грн / доба)',
+    badge: '20 000 – 40 000 грн / доба',
+    badgeColor: 'bg-rose-100 text-rose-950 border-rose-400 font-black',
+    amount: '40 000 грн/доба (штурм) або 20 000 грн/доба (відновлення позицій)',
+    summary: 'Окремі щоденні виплати за активні штурмові операції та відновлення контролю над рубежами оборони.',
     details: [
-      'Головна особливість — дні є накопичувальними. Вони не згорають у кінці місяця! Наприклад: 12 днів у вересні + 18 днів у жовтні = 30 днів -> виникає право на виплату 70 000 грн.',
-      'Виплачується на додаток до стандартних 100 000 грн (не замість них!).',
-      'Враховуються дні на лінії зіткнення з противником на глибину РВП, на території противника (в т.ч. на ТОТ), а також між позиціями сил оборони та військ РФ.'
+      '40 000 грн / доба — за штурмові дії безпосередньо на лінії бойового зіткнення або в глибині оборони противника.',
+      '20 000 грн / доба — за операції з відновлення втрачених позицій у глибині власної оборони.',
+      'Ці суми додаються як фіксовані добові до основного забезпечення.'
     ],
     documents: [
-      'Витяги з бойових розпоряджень (БР) із зазначенням координат позицій',
-      'Довідка штабу частини про дні безпосереднього виконання завдань на нулі',
-      'Рапорт військовослужбовця або подання командира роти/батальйону'
+      'Бойовий наказ командира на проведення штурмових дій',
+      'Підсумковий звіт/донесення про виконання штурмової операції'
     ],
-    normativeBase: 'Постанова Кабінету Міністрів України №401 від 12.04.2024'
+    normativeBase: 'Офіційний гайд МОУ по виплатах у 2026 році'
+  },
+  {
+    id: 'result_bonuses',
+    category: 'assault',
+    title: 'Бонуси за результат операцій (Полонені та ліквідація ворога)',
+    badge: '15 000 – 100 000 грн бонус',
+    badgeColor: 'bg-amber-100 text-amber-950 border-amber-400 font-black',
+    amount: '100 000 грн (за полоненого) / 15 000 грн (за ліквідованого)',
+    summary: 'Спеціальні винагороди військовослужбовцям за відчутний бойовий результат у контактних боях.',
+    details: [
+      '100 000 гривень — за кожного захопленого противника в полон для поповнення обмінного фонду.',
+      '15 000 гривень — за кожного ліквідованого противника в контактному бою.',
+      'Підтвердження ліквідації окупанта в контактному бою здійснюється за допомогою матеріалів відеофіксації (дрон, бодікам тощо).'
+    ],
+    documents: [
+      'Акт фіксації взяття в полон або матеріали відеофіксації контактного бою',
+      'Рапорт командира підрозділу'
+    ],
+    normativeBase: 'Рішення МОУ від 2026 року про преміювання за результат'
+  },
+  {
+    id: 'zone_70k',
+    category: 'zonal',
+    title: 'Зональна винагорода 70 000 грн (РОП / Ротний опорний пункт)',
+    badge: '70 000 грн/міс',
+    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300 font-bold',
+    amount: '~2 333 грн / день (30 дн.) або ~2 258 грн / день (31 дн.)',
+    summary: 'Зональна щомісячна виплата за виконання бойових завдань на відстані до ротного опорного пункту (РОП) включно.',
+    details: [
+      'Нараховується пропорційно кількості фактичних днів виконання завдань на глибину РОП.',
+      'Якщо протягом місяця військовий перебував у різних районах (наприклад, частину днів на ВОП, частину на РОП) — нарахування здійснюється окремо за кожну зону.'
+    ],
+    documents: [
+      'Бойове розпорядження із закріпленими рубежами ротних опорних пунктів',
+      'Наказ командира військової частини'
+    ],
+    normativeBase: 'Порядок зональних бойових виплат МОУ'
+  },
+  {
+    id: 'combat_100k',
+    category: 'combat',
+    title: 'Додаткова винагорода 100 000 грн (Лінія зіткнення / Вогневе ураження)',
+    badge: '100 000 грн/міс',
+    badgeColor: 'bg-rose-100 text-rose-800 border-rose-200 font-bold',
+    amount: '~3 333 грн / день (30 дн.) або ~3 225 грн / день (31 дн.)',
+    summary: 'Виплата за безпосередню участь у бойових діях на лінії зіткнення та виконання завдань із вогневого ураження противника.',
+    details: [
+      'Нараховується пропорційно дням безпосередньої участі в бойових діях.',
+      'Охоплює ведення вогню по ворогу, артилерійські та мінометні розрахунки, піхоту на передових рубежах, операторів БПЛА на передовій.'
+    ],
+    documents: [
+      'Бойове розпорядження (БР)',
+      'Журнал бойових дій (ЖБД)',
+      'Наказ командира частини по стройовій частині'
+    ],
+    normativeBase: 'Постанова КМУ №168, Наказ МОУ №260'
+  },
+  {
+    id: 'rear_10k',
+    category: 'general',
+    title: 'Додаткова винагорода 10 000 грн для небойових частин (Тил)',
+    badge: '10 000 грн/міс',
+    badgeColor: 'bg-slate-200 text-slate-800 border-slate-300 font-bold',
+    amount: '10 000 грн щомісяця (сумарно з базою — від 30 000 грн/міс)',
+    summary: 'Передбачена для військовослужбовців, які не беруть участі в бойових діях і не виконують завдання на пунктах управління.',
+    details: [
+      'Виплачується усім, хто не отримує інших бойових винагород (30 000, 50 000, 70 000 чи 100 000 грн).',
+      'Гарантує, що сукупний дохід військового за виконання обов’язків становить не менше 30 000 грн/місяць.',
+      'Зберігається під час лікування, але не виплачується під час основної відпустки.'
+    ],
+    documents: [
+      'Наказ командира військової частини про виплату додаткової винагороди'
+    ],
+    normativeBase: 'Постанова КМУ №168, роз’яснення МОУ 2026'
   },
   {
     id: 'special_50k',
     category: 'combat',
-    title: 'Винагорода 50 000 грн (Органи військового управління / Спецрубежі)',
+    title: 'Винагорода 50 000 грн (Органи військового управління / Штаби ОУВ)',
     badge: '50 000 грн/міс',
     badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
     amount: '~1 666 грн / день',
-    summary: 'Для військовослужбовців, які виконують завдання у складі органів військового управління (ОУВ, штаби угруповань, командні пункти бригад), що управляють військами в зоні бойових дій.',
+    summary: 'Для керівного складу та військових у складі органів військового управління, які управляють підрозділами в зоні бойових дій.',
     details: [
-      'Нараховується пропорційно дням виконання завдань.',
-      'Стосується штабів та пунктів управління, які здійснюють оперативне (бойове) керівництво частинами першого ешелону.',
-      'Перелік органів військового управління затверджується Головнокомандувачем або Генштабом ЗСУ.'
+      'Оперативне управління військами на командних пунктах та штабах угруповань.',
+      'Перелік затверджується Головнокомандувачем або Генштабом ЗСУ.'
     ],
-    documents: [
-      'Наказ про включення до складу оперативного угруповання/органу управління',
-      'Бойове розпорядження та графік чергування на КП/ПУ'
-    ],
-    normativeBase: 'Постанова КМУ №168, Наказ МОУ №260'
+    documents: ['Наказ про включення до складу ОУВ/штабу', 'Бойові графіки чергування'],
+    normativeBase: 'Постанова КМУ №168'
   },
   {
     id: 'duty_30k',
     category: 'combat',
-    title: 'Винагорода 30 000 грн (Зона бойових дій / Завдання забезпечення)',
+    title: 'Винагорода 30 000 грн (Зона бойових дій / ППО / Забезпечення)',
     badge: '30 000 грн/міс',
     badgeColor: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     amount: '~1 000 грн / день',
-    summary: 'Виплачується за виконання завдань у зоні бойових дій поза лінією бойового зіткнення.',
+    summary: 'За виконання бойових завдань у зоні бойових дій поза лінією безпосереднього зіткнення.',
     details: [
-      'Інженерне обладнання оборонних рубежів, мостів, мінно-вибухових загороджень.',
-      'Протиповітряне прикриття об’єктів у зоні бойових дій, бойове чергування мобільних вогневих груп ППО.',
-      'Логістичне забезпечення, підвезення БК, ПММ, евакуація техніки та поранених у визначених районах бойових дій.'
+      'Інженерне фортифікаційне обладнання оборони, розмінування.',
+      'Бойове чергування мобільних вогневих груп ППО.',
+      'Логістика, підвезення БК, ПММ та медична евакуація.'
     ],
-    documents: [
-      'Бойове розпорядження (БР) на виконання робіт чи чергування',
-      'Наказ командира військової частини по стройовій частині'
-    ],
+    documents: ['Бойове розпорядження (БР)', 'Наказ по стройовій частині'],
     normativeBase: 'Постанова КМУ №168'
-  },
-  {
-    id: 'base_ogz',
-    category: 'general',
-    title: 'Основне Грошове Забезпечення (ОГЗ / База)',
-    badge: 'від 20 100 грн/міс',
-    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    amount: 'Мінімум 20 100 грн (для солдата/стрільця без посадових надбавок)',
-    summary: 'Гарантована щомісячна основа, яку отримує кожен військовослужбовець за контрактом чи мобілізацією незалежно від зони перебування.',
-    details: [
-      'Посадовий оклад (залежить від тарифного розряду посади).',
-      'Оклад за військовим званням (солдат, сержант, лейтенант тощо).',
-      'Надбавка за вислугу років (від 25% до 50% залежно від стажу служби).',
-      'Щомісячні надбавки за особливості проходження служби (65% або 100%) та щомісячна премія (залежно від дисципліни).'
-    ],
-    documents: [
-      'Наказ про призначення на посаду та зарахування до списків особового складу частини'
-    ],
-    normativeBase: 'Закон України №2011-XII, Наказ МОУ №260'
   },
   {
     id: 'health_injury',
     category: 'health',
-    title: 'Виплати при пораненні, контузії та лікуванні (100 000 грн)',
-    badge: '100 000 грн + ОГЗ',
-    badgeColor: 'bg-purple-100 text-purple-800 border-purple-200',
-    amount: '100 000 грн на місяць протягом усього часу безперервного лікування',
-    summary: 'Збереження грошового забезпечення та виплата 100к під час стаціонарного лікування в госпіталі після поранення, травми або контузії.',
+    title: 'Виплати при пораненні / лікуванні (100 000 грн)',
+    badge: '100 000 грн/міс + ОГЗ',
+    badgeColor: 'bg-purple-100 text-purple-800 border-purple-200 font-bold',
+    amount: '100 000 грн на місяць протягом усього стаціонарного лікування',
+    summary: 'Збереження грошового забезпечення та виплата 100 000 грн під час лікування після поранення або контузії.',
     details: [
-      'Виплачується за весь час перебування на стаціонарному лікуванні в закладах охорони здоров’я (включаючи закордонні клініки).',
-      'Виплачується під час відпустки для лікування після тяжкого поранення за рішенням ВЛК.',
-      'При контузії (ЧМТ, акубаротравмі) обов’язково вимагайте запис про первинний огляд на медпункті батальйону (Ф-100 або картка передового району).'
+      'Виплачується за весь час безперервного лікування в лікарнях та шпиталях (включно із закордонними).',
+      'Виплачується під час відпустки для лікування після тяжкого поранення за рішенням ВЛК.'
     ],
     documents: [
-      'Довідка про обставини травми (поранення, контузії, каліцтва) — Додаток 5',
-      'Виписний епікриз із шпиталю / медичного закладу',
-      'Постанова ВЛК про причинний зв’язок поранення («Поранення пов’язане із захистом Батьківщини»)'
+      'Довідка про обставини травми (Додаток 5)',
+      'Виписний епікриз із шпиталю',
+      'Постанова ВЛК про причинний зв’язок поранення'
     ],
     normativeBase: 'Постанова КМУ №168, Наказ МОУ №260'
   },
   {
-    id: 'annual_wellness',
+    id: 'contract_signing',
     category: 'annual',
-    title: 'Оздоровчі (Грошова допомога на оздоровлення)',
-    badge: '1 місячне ОГЗ (раз на рік)',
-    badgeColor: 'bg-sky-100 text-sky-800 border-sky-200',
-    amount: 'У розмірі місячного грошового забезпечення (від 20 100 грн)',
-    summary: 'Щорічна одноразова державна виплата, яка надається кожному військовослужбовцю при вибутті у щорічну основну відпустку.',
+    title: 'Одноразова допомога при укладенні першого контракту (2026 рік)',
+    badge: '26 624 – 33 280 грн',
+    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200 font-bold',
+    amount: 'Рядовий: 26 624 грн | Сержант: 29 952 грн | Офіцер: 33 280 грн',
+    summary: 'Обчислюється від прожиткового мінімуму (3 328 грн на 1 січня 2026 року) і виплачується після набрання чинності першим контрактом.',
     details: [
-      'Виплачується один раз на календарний рік.',
-      'Якщо ви не берете відпустку або берете її частинами, допомога все одно виплачується на підставі окремого рапорту на оздоровлення.',
-      'Розмір розраховується з місячного ОГЗ на день підписання наказу командира частини.'
+      'Рядовий склад: 8 прожиткових мінімумів = 26 624 грн.',
+      'Сержантський і старшинський склад: 9 прожиткових мінімумів = 29 952 грн.',
+      'Офіцерський склад: 10 прожиткових мінімумів = 33 280 грн.'
     ],
-    documents: [
-      'Рапорт на надання частини щорічної основної відпустки з виплатою грошової допомоги на оздоровлення'
-    ],
-    normativeBase: 'Закон України №2011-XII, Наказ МОУ №260 (Розділ XXII)'
+    documents: ['Витяг із наказу про зарахування до списків частини на підставі першого контракту'],
+    normativeBase: 'Закон України №2011-XII, Держбюджет України на 2026 рік'
   },
   {
-    id: 'annual_material',
-    category: 'annual',
-    title: 'Матеріальна допомога на соціально-побутові потреби',
-    badge: '1 місячне ОГЗ (раз на рік)',
-    badgeColor: 'bg-teal-100 text-teal-800 border-teal-200',
-    amount: 'У розмірі місячного грошового забезпечення',
-    summary: 'Додаткова щорічна допомога, яка виплачується військовослужбовцям за наявності соціально-побутових підстав.',
+    id: 'cap_limit',
+    category: 'general',
+    title: 'Максимальний щомісячний ліміт виплат (460 000 грн)',
+    badge: 'Ліміт: 460 000 грн/міс',
+    badgeColor: 'bg-slate-900 text-white font-extrabold',
+    amount: 'До 460 000 грн/місяць бойових виплат',
+    summary: 'Офіційне обмеження МОУ: сума щомісячних бойових виплат не може перевищувати 460 000 грн.',
     details: [
-      'Виплачується за рапортом військового один раз на рік.',
-      'Підстави: поранення або хвороба військового чи членів сім’ї, народження дитини, одруження, смерть близьких родичів, порушення житлових умов внаслідок бойових дій.',
-      'Рішення про виплату ухвалює командир військової частини в межах затвердженого фонду.'
+      'Базове грошове забезпечення, бонуси за полонених/ліквідацію та допомога за перший контракт додаються до цієї суми окремо.'
     ],
-    documents: [
-      'Рапорт на матеріальну допомогу для вирішення соціально-побутових питань',
-      'Документи, що підтверджують підстави (свідоцтво про шлюб/народження, довідка про поранення тощо)'
-    ],
-    normativeBase: 'Наказ МОУ №260 (Розділ XXIII)'
+    documents: ['Розрахунковий лист військової частини'],
+    normativeBase: 'Офіційний гайд МОУ по виплатах у 2026 році'
   },
   {
     id: 'action_dispute',
     category: 'action',
-    title: 'Алгоритм дій: Що робити, якщо не нарахували бойові або є недоплата?',
-    badge: 'Інструкція захисту прав',
+    title: 'Терміни виплат та що робити при недоплаті',
+    badge: 'До 20 числа кожного місяця',
     badgeColor: 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
-    amount: 'Покроковий план дій',
-    summary: 'Чіткі юридичні та стройові кроки для військовослужбовця, якщо фіно нарахувало менше коштів або дні не врахували в наказ.',
+    amount: 'Термін виплат: до 20 числа поточного місяця за минулий',
+    summary: 'Офіційний термін виплат — до 20 числа. Якщо кошти надійшли до частини пізніше — виплата протягом 3 днів.',
     details: [
-      'Крок 1: Зверніться до командира взводу / роти й уточніть, чи подали вас у щомісячний Рапорт про участь у бойових діях та Журнал бойових дій (ЖБД).',
-      'Крок 2: Зверніться до фінансової служби (фініка) або стройової частини частини та попросіть надати розрахунковий лист або виписку, за скільки саме днів нараховано бойові.',
-      'Крок 3: Якщо дні пропущені помилково — подайте письмовий Рапорт на ім’я командира військової частини про проведення службової перевірки та донарахування додаткової винагороди за відповідний місяць, зазначивши номери БР.',
-      'Крок 4: Якщо питання ігнорується — звертайтеся на гарячу лінію Міністерства оборони (1512) або до Військової служби правопорядку (ВСП).'
+      'Згідно з роз’ясненням МОУ, грошове забезпечення виплачується до 20 числа поточного місяця за минулий.',
+      'Якщо вам не нарахували бойові: візьміть у фіно розрахунковий лист, перевірте наявність вашого прізвища в БР та ЖБД, подайте рапорт командиру на перерахунок.',
+      'Гаряча лінія Міністерства оборони України: 1512 або 0 800 500 442.'
     ],
     documents: [
-      'Копія військового квитка та довідки про безпосередню участь у бойових діях',
-      'Письмовий рапорт на проведення службового розслідування / донарахування',
-      'Виписка з банківської картки про фактично зараховану суму'
+      'Розрахунковий лист із фінансової служби',
+      'Рапорт на ім’я командира частини про перерахунок'
     ],
-    normativeBase: 'Дисциплінарний статут ЗСУ, Закон України «Про звернення громадян»'
+    normativeBase: 'Офіційне роз’яснення МОУ (серпень 2026)'
   }
 ];
 
 export const GuideView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
-  const [expandedId, setExpandedId] = useState<string | null>('combat_100k');
+  const [expandedId, setExpandedId] = useState<string | null>('zone_170k');
 
   const filteredGuides = GUIDE_DATA.filter((item) => {
     const matchesFilter =
@@ -227,35 +268,57 @@ export const GuideView: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* Header Banner */}
+      {/* Official 2026 MoD Sync Header */}
       <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
-        <div className="flex items-center gap-2.5 mb-2">
-          <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 leading-tight">
-              Довідник виплат ЗСУ
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Офіційні норми, підстави, тарифи та захист прав військовослужбовця
-            </p>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-2xs">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight flex items-center gap-2">
+                Гайд по виплатах у 2026 році
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
+                  Синхронізовано з МОУ
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                За офіційним роз’ясненням Міністерства оборони України (серпень 2026)
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Search Bar */}
+        {/* Source link badge */}
+        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+          <span className="text-slate-400 font-medium flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            Виплата ГЗ здійснюється щомісяця <strong>до 20 числа</strong>
+          </span>
+          <a
+            href="https://mod.gov.ua/explanation/hroshove-zabezpechennia-viiskovosluzhbovtsia-haid-po-vyplatakh-u-2026-rotsi"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1"
+          >
+            <span>Джерело mod.gov.ua</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+
+        {/* Search Input */}
         <div className="relative mt-3">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Пошук виплати (наприклад: 70 000, оздоровчі, поранення)..."
+            placeholder="Шукати: 170к, штурм 40к, полонені 100к, тил 10к, поранення..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
           />
         </div>
 
-        {/* Filter Pills */}
+        {/* Category Filters */}
         <div className="flex gap-1.5 overflow-x-auto pt-3 pb-1 no-scrollbar text-xs">
           <button
             onClick={() => setSelectedFilter('all')}
@@ -268,49 +331,69 @@ export const GuideView: React.FC = () => {
             Всі виплати
           </button>
           <button
-            onClick={() => setSelectedFilter('combat')}
+            onClick={() => setSelectedFilter('zonal')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-colors shrink-0 ${
-              selectedFilter === 'combat'
-                ? 'bg-rose-600 text-white'
+              selectedFilter === 'zonal'
+                ? 'bg-red-700 text-white'
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
             }`}
           >
-            Бойові (100к, 70к, 50к, 30к)
+            Зональні (170к ВОП, 70к РОП)
+          </button>
+          <button
+            onClick={() => setSelectedFilter('assault')}
+            className={`px-3 py-1.5 rounded-xl font-bold transition-colors shrink-0 ${
+              selectedFilter === 'assault'
+                ? 'bg-rose-700 text-white'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+            }`}
+          >
+            Штурмові (40к/20к) і Бонуси
+          </button>
+          <button
+            onClick={() => setSelectedFilter('combat')}
+            className={`px-3 py-1.5 rounded-xl font-bold transition-colors shrink-0 ${
+              selectedFilter === 'combat'
+                ? 'bg-amber-700 text-white'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+            }`}
+          >
+            Бойові (100к, 50к, 30к)
           </button>
           <button
             onClick={() => setSelectedFilter('health')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-colors shrink-0 ${
               selectedFilter === 'health'
-                ? 'bg-purple-600 text-white'
+                ? 'bg-purple-700 text-white'
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
             }`}
           >
-            Поранення / ВЛК
+            Поранення (100к)
           </button>
           <button
-            onClick={() => setSelectedFilter('annual')}
+            onClick={() => setSelectedFilter('general')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-colors shrink-0 ${
-              selectedFilter === 'annual'
-                ? 'bg-sky-600 text-white'
+              selectedFilter === 'general'
+                ? 'bg-slate-700 text-white'
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
             }`}
           >
-            Оздоровчі та соцпобут
+            Тил (10к) і Ліміт 460к
           </button>
           <button
             onClick={() => setSelectedFilter('action')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-colors shrink-0 ${
               selectedFilter === 'action'
-                ? 'bg-amber-600 text-white'
+                ? 'bg-emerald-700 text-white'
                 : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
             }`}
           >
-            Що робити при недоплаті
+            Терміни та скарги
           </button>
         </div>
       </div>
 
-      {/* Guide Cards List */}
+      {/* Guide Cards */}
       <div className="space-y-3">
         {filteredGuides.map((item) => {
           const isExpanded = expandedId === item.id;
@@ -320,7 +403,7 @@ export const GuideView: React.FC = () => {
               key={item.id}
               className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 transition-all"
             >
-              {/* Card Header Accordion Toggle */}
+              {/* Accordion Toggle */}
               <div
                 onClick={() => toggleExpand(item.id)}
                 className="cursor-pointer select-none"
@@ -351,23 +434,21 @@ export const GuideView: React.FC = () => {
                 </p>
               </div>
 
-              {/* Expanded Details */}
+              {/* Expanded Card Details */}
               {isExpanded && (
                 <div className="mt-4 pt-4 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
-                  {/* Amount / Rate Callout */}
                   <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
                     <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400 block mb-0.5">
-                      Розрахункова сума:
+                      Розмір виплати (затверджено МОУ):
                     </span>
                     <span className="text-sm font-black text-slate-900">
                       {item.amount}
                     </span>
                   </div>
 
-                  {/* Conditions & Details */}
                   <div>
                     <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                      Умови нарахування та особливості:
+                      Умови нарахування та критерії:
                     </h4>
                     <ul className="space-y-1.5 text-xs text-slate-600 font-medium">
                       {item.details.map((point, idx) => (
@@ -379,10 +460,9 @@ export const GuideView: React.FC = () => {
                     </ul>
                   </div>
 
-                  {/* Required Documents */}
                   <div>
                     <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">
-                      Які документи мають бути оформлені (підстави):
+                      Підстави та необхідні документи:
                     </h4>
                     <div className="space-y-1">
                       {item.documents.map((doc, idx) => (
@@ -397,9 +477,8 @@ export const GuideView: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Normative Base Law */}
                   <div className="text-[11px] text-slate-400 pt-1">
-                    <span className="font-semibold text-slate-500">Законодавча база: </span>
+                    <span className="font-semibold text-slate-500">Офіційна база: </span>
                     <span>{item.normativeBase}</span>
                   </div>
                 </div>
@@ -409,20 +488,20 @@ export const GuideView: React.FC = () => {
         })}
       </div>
 
-      {/* Helpful Hotline Box */}
+      {/* Official Hotlines Contact Banner */}
       <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-5 text-emerald-950 space-y-2">
         <h4 className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-emerald-900">
           <Phone className="w-4 h-4 text-emerald-700" />
-          Гарячі лінії правової підтримки військовослужбовців
+          Гарячі лінії правової підтримки та скарг МОУ
         </h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium pt-1">
-          <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
-            <span className="text-slate-500 block text-[10px]">Міністерство оборони України:</span>
-            <strong className="text-slate-900 font-bold">1512</strong> або <strong>0 800 500 442</strong>
+          <div className="bg-white/90 p-2.5 rounded-xl border border-emerald-200">
+            <span className="text-slate-500 block text-[10px]">Гаряча лінія Міністерства оборони:</span>
+            <strong className="text-slate-900 font-bold text-sm">1512</strong> або <strong>0 800 500 442</strong>
           </div>
-          <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+          <div className="bg-white/90 p-2.5 rounded-xl border border-emerald-200">
             <span className="text-slate-500 block text-[10px]">Безоплатна правова допомога:</span>
-            <strong className="text-slate-900 font-bold">0 800 213 103</strong>
+            <strong className="text-slate-900 font-bold text-sm">0 800 213 103</strong>
           </div>
         </div>
       </div>

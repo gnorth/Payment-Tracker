@@ -1,5 +1,10 @@
-import { getDaysInMonth, parseISO } from 'date-fns';
+import { getDaysInMonth } from 'date-fns';
 import { DayRecord, PayoutCategory, DEFAULT_CATEGORIES } from '../types';
+
+/**
+ * Maximum monthly cap for combat payments according to Ministry of Defence rules (2026)
+ */
+export const MAX_MONTHLY_COMBAT_PAYOUT = 460000;
 
 /**
  * Calculates daily rate for a payout category in a specific month
@@ -8,6 +13,11 @@ export function getDailyRateForMonth(
   category: PayoutCategory,
   yearMonth: string // "YYYY-MM"
 ): number {
+  // If fixed daily rate (e.g. 40 000 UAH assault, 20 000 UAH recovery)
+  if (category.isDailyFixed && category.dailyRate) {
+    return category.dailyRate;
+  }
+
   if (category.dailyRate && category.dailyRate > 0) {
     return category.dailyRate;
   }
@@ -34,12 +44,13 @@ export function calculateMonthExpectedPayout(
   totalExpected: number;
   dayBreakdown: Record<string, { days: number; totalAmount: number; name: string }>;
   combatDaysCount: number;
+  isCapped: boolean;
 } {
   const categoryMap = new Map<string, PayoutCategory>();
   categories.forEach((cat) => categoryMap.set(cat.id, cat));
 
   const dayBreakdown: Record<string, { days: number; totalAmount: number; name: string }> = {};
-  let additionalRewards = 0;
+  let rawAdditionalRewards = 0;
   let combatDaysCount = 0;
 
   // Filter records for this target month
@@ -54,7 +65,7 @@ export function calculateMonthExpectedPayout(
     }
 
     const rate = record.customRate ?? getDailyRateForMonth(category, yearMonth);
-    additionalRewards += rate;
+    rawAdditionalRewards += rate;
 
     if (!dayBreakdown[category.id]) {
       dayBreakdown[category.id] = {
@@ -68,6 +79,10 @@ export function calculateMonthExpectedPayout(
     dayBreakdown[category.id].totalAmount += rate;
   });
 
+  // Apply Ministry of Defence 2026 Monthly combat payout cap (460 000 грн)
+  const isCapped = rawAdditionalRewards > MAX_MONTHLY_COMBAT_PAYOUT;
+  const additionalRewards = Math.min(rawAdditionalRewards, MAX_MONTHLY_COMBAT_PAYOUT);
+
   const totalExpected = baseMonthlySalary + additionalRewards;
 
   return {
@@ -75,7 +90,8 @@ export function calculateMonthExpectedPayout(
     additionalRewards,
     totalExpected,
     dayBreakdown,
-    combatDaysCount
+    combatDaysCount,
+    isCapped
   };
 }
 
@@ -87,9 +103,9 @@ export function calculate70kMilestone(
   categories: PayoutCategory[] = DEFAULT_CATEGORIES
 ): {
   totalCombatDays: number;
-  completedCycles: number; // How many 70k bonuses earned (totalCombatDays / 30)
-  currentCycleDays: number; // Days in current cycle (totalCombatDays % 30)
-  daysRemaining: number; // Days until next 70k bonus (30 - currentCycleDays)
+  completedCycles: number;
+  currentCycleDays: number;
+  daysRemaining: number;
 } {
   const categoryMap = new Map<string, PayoutCategory>();
   categories.forEach((cat) => categoryMap.set(cat.id, cat));

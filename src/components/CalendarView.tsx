@@ -175,14 +175,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   // Color mapper for clean minimal day bubbles
   const getCategoryStyles = (typeId?: string) => {
     switch (typeId) {
+      case 'zone_170k':
+        return 'bg-red-50 text-red-900 border-red-300 font-extrabold';
+      case 'assault_40k':
+        return 'bg-rose-100 text-rose-950 border-rose-400 font-black';
+      case 'recovery_20k':
+        return 'bg-orange-100 text-orange-950 border-orange-400 font-black';
       case 'combat_100k':
         return 'bg-rose-50 text-rose-700 border-rose-300 font-bold';
+      case 'zone_70k':
+        return 'bg-amber-50 text-amber-900 border-amber-300 font-bold';
       case 'special_50k':
-        return 'bg-amber-50 text-amber-800 border-amber-300 font-bold';
+        return 'bg-amber-50 text-amber-800 border-amber-200 font-bold';
       case 'duty_30k':
         return 'bg-yellow-50 text-yellow-800 border-yellow-300 font-bold';
       case 'sick_100k':
         return 'bg-purple-50 text-purple-700 border-purple-300 font-bold';
+      case 'rear_10k':
+        return 'bg-slate-100 text-slate-800 border-slate-300 font-semibold';
       case 'base_day':
         return 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold';
       case 'vacation':
@@ -196,14 +206,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const getCategoryDot = (typeId?: string) => {
     switch (typeId) {
+      case 'zone_170k':
+        return 'bg-red-600';
+      case 'assault_40k':
+        return 'bg-rose-600';
+      case 'recovery_20k':
+        return 'bg-orange-600';
       case 'combat_100k':
         return 'bg-rose-500';
+      case 'zone_70k':
+        return 'bg-amber-600';
       case 'special_50k':
         return 'bg-amber-500';
       case 'duty_30k':
         return 'bg-yellow-500';
       case 'sick_100k':
         return 'bg-purple-500';
+      case 'rear_10k':
+        return 'bg-slate-500';
       case 'base_day':
         return 'bg-emerald-500';
       case 'vacation':
