@@ -2,11 +2,12 @@
 node_modules
 .pnpm-store
 
-# Production build
+# Production build & cache
 dist
 dist-ssr
 build
 *.local
+.vite
 
 # System & IDE
 .DS_Store
