@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { format } from 'date-fns';
 import { db } from './db';
@@ -12,11 +12,15 @@ import { Header } from './components/Header';
 import { Dashboard } from './components/Dashboard';
 import { CalendarView } from './components/CalendarView';
 import { ReconciliationView } from './components/ReconciliationView';
+import { AnalyticsView } from './components/AnalyticsView';
 import { SettingsModal } from './components/SettingsModal';
+import { ReportGeneratorModal } from './components/ReportGeneratorModal';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'calendar' | 'reconciliation' | 'settings'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'reconciliation' | 'analytics' | 'settings'>('calendar');
   const [currentMonth, setCurrentMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
+  const [stealthMode, setStealthMode] = useState<boolean>(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
 
   // Live IndexedDB queries
   const dayRecords = useLiveQuery(() => db.dayRecords.toArray()) || [];
@@ -43,9 +47,13 @@ export const App: React.FC = () => {
   const monthTransactions = transactions.filter((t) => t.targetMonth === currentMonth);
   const totalReceivedForMonth = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
 
-  // Save/Delete day record
+  // Save single / batch day records
   const handleSaveDayRecord = async (record: DayRecord) => {
     await db.dayRecords.put(record);
+  };
+
+  const handleBatchSaveRecords = async (records: DayRecord[]) => {
+    await db.dayRecords.bulkPut(records);
   };
 
   const handleDeleteDayRecord = async (dateStr: string) => {
@@ -68,11 +76,16 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-12 selection:bg-emerald-500 selection:text-slate-950">
+    <div className={`min-h-screen font-sans pb-12 transition-colors selection:bg-emerald-500 selection:text-slate-950 ${
+      stealthMode ? 'bg-black text-slate-200' : 'bg-slate-950 text-slate-100'
+    }`}>
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         combatDaysCount={milestone70k.totalCombatDays}
+        stealthMode={stealthMode}
+        setStealthMode={setStealthMode}
+        onOpenReportModal={() => setIsReportModalOpen(true)}
       />
 
       <main className="max-w-7xl mx-auto px-4 pt-4">
@@ -96,6 +109,7 @@ export const App: React.FC = () => {
             dayRecords={dayRecords}
             onSaveDayRecord={handleSaveDayRecord}
             onDeleteDayRecord={handleDeleteDayRecord}
+            onBatchSaveRecords={handleBatchSaveRecords}
             categories={DEFAULT_CATEGORIES}
           />
         )}
@@ -110,6 +124,15 @@ export const App: React.FC = () => {
           />
         )}
 
+        {activeTab === 'analytics' && (
+          <AnalyticsView
+            dayRecords={dayRecords}
+            transactions={transactions}
+            baseMonthlySalary={profile.baseMonthlySalary}
+            categories={DEFAULT_CATEGORIES}
+          />
+        )}
+
         {activeTab === 'settings' && (
           <SettingsModal
             profile={profile}
@@ -120,6 +143,18 @@ export const App: React.FC = () => {
           />
         )}
       </main>
+
+      {/* Report Generator Modal */}
+      <ReportGeneratorModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        currentMonth={currentMonth}
+        dayRecords={dayRecords}
+        baseMonthlySalary={profile.baseMonthlySalary}
+        rank={profile.rank}
+        position={profile.position}
+        categories={DEFAULT_CATEGORIES}
+      />
     </div>
   );
 };

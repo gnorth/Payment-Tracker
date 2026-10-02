@@ -8,10 +8,11 @@ import {
   parseISO,
   isSameDay,
   addMonths,
-  subMonths
+  subMonths,
+  eachDayOfInterval as getRangeDays
 } from 'date-fns';
 import { uk } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Check, MessageSquare, ShieldAlert, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, MessageSquare, CheckCircle, Layers, Calendar as CalendarIcon, Sparkles } from 'lucide-react';
 import { DayRecord, PayoutCategory, DEFAULT_CATEGORIES } from '../types';
 import { getDailyRateForMonth, formatCurrency } from '../utils/calculations';
 
@@ -21,6 +22,7 @@ interface CalendarViewProps {
   dayRecords: DayRecord[];
   onSaveDayRecord: (record: DayRecord) => void;
   onDeleteDayRecord: (date: string) => void;
+  onBatchSaveRecords: (records: DayRecord[]) => void;
   categories?: PayoutCategory[];
 }
 
@@ -30,6 +32,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   dayRecords,
   onSaveDayRecord,
   onDeleteDayRecord,
+  onBatchSaveRecords,
   categories = DEFAULT_CATEGORIES
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('combat_100k');
@@ -37,6 +40,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const [notesInput, setNotesInput] = useState<string>('');
   const [orderInput, setOrderInput] = useState<string>('');
   const [isPaidOutInput, setIsPaidOutInput] = useState<boolean>(false);
+
+  // Range selection state (UX Product Feature)
+  const [showRangeSelector, setShowRangeSelector] = useState<boolean>(false);
+  const [rangeStart, setRangeStart] = useState<string>('');
+  const [rangeEnd, setRangeEnd] = useState<string>('');
+  const [rangeOrderNumber, setRangeOrderNumber] = useState<string>('');
 
   // Parse month dates
   const [yearStr, monthStr] = currentMonth.split('-');
@@ -46,13 +55,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const monthEnd = endOfMonth(monthDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // Ukrainian day names header (Понеділок - Неділя)
   const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
-
-  // Offset for first day of month (Monday = 0, Sunday = 6)
   const firstDayIndex = (getDay(monthStart) + 6) % 7;
 
-  // Map of records by date
   const recordMap = new Map<string, DayRecord>();
   dayRecords.forEach((r) => recordMap.set(r.date, r));
 
@@ -73,12 +78,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const existing = recordMap.get(dateStr);
 
     if (activeDay === dateStr) {
-      // Toggle off detail modal
       setActiveDay(null);
       return;
     }
 
-    // Apply selected stamp directly if no details panel open
     const newRecord: DayRecord = {
       date: dateStr,
       typeId: selectedCategory,
@@ -115,15 +118,106 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
+  // Batch Range Apply Handler
+  const handleApplyRange = () => {
+    if (!rangeStart || !rangeEnd) return;
+    const startDate = parseISO(rangeStart);
+    const endDate = parseISO(rangeEnd);
+
+    if (startDate > endDate) {
+      alert('Дата початку не може бути пізніше дати кінця!');
+      return;
+    }
+
+    const intervalDays = getRangeDays({ start: startDate, end: endDate });
+    const newRecords: DayRecord[] = intervalDays.map((d) => {
+      const dateStr = format(d, 'yyyy-MM-dd');
+      const existing = recordMap.get(dateStr);
+      return {
+        date: dateStr,
+        typeId: selectedCategory,
+        notes: existing?.notes || '',
+        orderNumber: rangeOrderNumber || existing?.orderNumber || '',
+        isPaidOut: existing?.isPaidOut || false
+      };
+    });
+
+    onBatchSaveRecords(newRecords);
+    setShowRangeSelector(false);
+    setRangeStart('');
+    setRangeEnd('');
+    setRangeOrderNumber('');
+  };
+
   return (
     <div className="space-y-4">
-      {/* Category Selection Bar (Stamp Palette) */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 shadow-lg">
-        <div className="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2 flex items-center justify-between">
-          <span>Оберіть тип виплати (Штамп дня):</span>
-          <span className="text-[11px] text-emerald-400 font-normal">Натискайте на дні в календарі для нанесення</span>
+      {/* Category Stamp Palette & Range Selector Toggle */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+          <div className="text-xs uppercase tracking-wider font-semibold text-slate-400">
+            Оберіть тип виплати (Штамп дня):
+          </div>
+          <button
+            onClick={() => setShowRangeSelector(!showRangeSelector)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors border ${
+              showRangeSelector
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                : 'bg-slate-950 text-slate-300 hover:text-white border-slate-700'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Масове відмічання днів (Діапазон)</span>
+          </button>
         </div>
 
+        {/* Batch Range Selection Panel */}
+        {showRangeSelector && (
+          <div className="bg-slate-950 border border-amber-500/30 p-4 rounded-xl space-y-3">
+            <h4 className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4" />
+              Швидке нанесення типу виплати на період днів
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[11px] text-slate-400 font-semibold mb-1">З дати:</label>
+                <input
+                  type="date"
+                  value={rangeStart}
+                  onChange={(e) => setRangeStart(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] text-slate-400 font-semibold mb-1">По дату:</label>
+                <input
+                  type="date"
+                  value={rangeEnd}
+                  onChange={(e) => setRangeEnd(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] text-slate-400 font-semibold mb-1">Бойове Розпорядження (БР №):</label>
+                <input
+                  type="text"
+                  placeholder="наприклад: БР №12/2026"
+                  value={rangeOrderNumber}
+                  onChange={(e) => setRangeOrderNumber(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-100 focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+            </div>
+            <button
+              onClick={handleApplyRange}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-md flex items-center gap-1.5"
+            >
+              <Check className="w-4 h-4" />
+              Застосувати штамп до вибраного періоду
+            </button>
+          </div>
+        )}
+
+        {/* Category Buttons Palette */}
         <div className="flex flex-wrap gap-2">
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.id;
@@ -133,7 +227,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all active:scale-95 ${
                   cat.color
                 } ${
                   isSelected
@@ -144,7 +238,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 <span>{cat.shortName}</span>
                 {rate > 0 && (
                   <span className="text-[10px] opacity-75 bg-black/30 px-1.5 py-0.5 rounded">
-                    ~{Math.round(rate)} грн/дн
+                    ~{Math.round(rate)} ₴/дн
                   </span>
                 )}
               </button>
@@ -153,7 +247,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       </div>
 
-      {/* Calendar Header Controls */}
+      {/* Calendar Grid Header & Month Navigation */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg">
         <div className="flex items-center justify-between mb-4">
           <button
@@ -175,7 +269,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </button>
         </div>
 
-        {/* Days of week header */}
+        {/* Days of Week Header */}
         <div className="grid grid-cols-7 gap-1.5 mb-2 text-center">
           {weekDays.map((day, idx) => (
             <div
@@ -189,14 +283,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           ))}
         </div>
 
-        {/* Calendar Grid */}
+        {/* Calendar Days Grid */}
         <div className="grid grid-cols-7 gap-1.5">
-          {/* Empty offset slots */}
           {Array.from({ length: firstDayIndex }).map((_, i) => (
             <div key={`empty-${i}`} className="h-20 sm:h-24 bg-slate-950/40 rounded-xl border border-slate-900/50" />
           ))}
 
-          {/* Month Days */}
           {daysInMonth.map((day) => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const record = recordMap.get(dateStr);
@@ -208,13 +300,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <div
                 key={dateStr}
                 onClick={() => handleDayClick(dateStr)}
-                className={`h-20 sm:h-24 p-1.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all relative overflow-hidden select-none ${
+                className={`h-20 sm:h-24 p-1.5 rounded-xl border flex flex-col justify-between cursor-pointer transition-all relative overflow-hidden select-none active:scale-95 ${
                   category
                     ? `${category.color} border-slate-700 shadow-sm`
                     : 'bg-slate-950 hover:bg-slate-800/80 border-slate-800 text-slate-300'
                 } ${isActive ? 'ring-2 ring-emerald-400 z-10' : ''}`}
               >
-                {/* Top Day row */}
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-200">
                     {format(day, 'd')}
@@ -228,7 +319,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   )}
                 </div>
 
-                {/* Center Badge / Category Name */}
                 {category ? (
                   <div className="my-auto">
                     <div className="text-[10px] sm:text-xs font-extrabold truncate">
@@ -246,7 +336,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   </div>
                 )}
 
-                {/* Bottom notes indicator */}
                 {(record?.notes || record?.orderNumber) && (
                   <div className="text-[9px] text-amber-300 bg-black/40 px-1 py-0.5 rounded truncate flex items-center gap-1">
                     <MessageSquare className="w-2.5 h-2.5 shrink-0" />
@@ -259,7 +348,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       </div>
 
-      {/* Detail Editor Modal / Panel for selected active day */}
+      {/* Selected Day Details Modal */}
       {activeDay && (
         <div className="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 shadow-xl space-y-3">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -284,7 +373,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 placeholder="наприклад: БР №14/2026"
                 value={orderInput}
                 onChange={(e) => setOrderInput(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:ring-1 focus:ring-emerald-500"
               />
             </div>
 
@@ -297,7 +386,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 placeholder="наприклад: НП Північний, розрахунок"
                 value={notesInput}
                 onChange={(e) => setNotesInput(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:ring-1 focus:ring-emerald-500"
               />
             </div>
           </div>
