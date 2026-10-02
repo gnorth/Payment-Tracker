@@ -15,9 +15,10 @@ import { ReconciliationView } from './components/ReconciliationView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { SettingsModal } from './components/SettingsModal';
 import { ReportGeneratorModal } from './components/ReportGeneratorModal';
+import { GuideView } from './components/GuideView';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'calendar' | 'reconciliation' | 'analytics' | 'settings'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'reconciliation' | 'guide' | 'analytics' | 'settings'>('calendar');
   const [currentMonth, setCurrentMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
@@ -123,6 +124,8 @@ export const App: React.FC = () => {
             onDeleteTransaction={handleDeleteTransaction}
           />
         )}
+
+        {activeTab === 'guide' && <GuideView />}
 
         {activeTab === 'analytics' && (
           <AnalyticsView

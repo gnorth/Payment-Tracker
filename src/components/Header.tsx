@@ -1,9 +1,19 @@
 import React from 'react';
-import { ShieldCheck, Calendar, Wallet, Settings, BarChart3, Sun, Moon, FileText } from 'lucide-react';
+import {
+  ShieldCheck,
+  Calendar,
+  Wallet,
+  Settings,
+  BarChart3,
+  Sun,
+  Moon,
+  FileText,
+  BookOpen
+} from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'calendar' | 'reconciliation' | 'analytics' | 'settings';
-  setActiveTab: (tab: 'calendar' | 'reconciliation' | 'analytics' | 'settings') => void;
+  activeTab: 'calendar' | 'reconciliation' | 'guide' | 'analytics' | 'settings';
+  setActiveTab: (tab: 'calendar' | 'reconciliation' | 'guide' | 'analytics' | 'settings') => void;
   combatDaysCount: number;
   isDarkMode: boolean;
   setIsDarkMode: (dark: boolean) => void;
@@ -88,6 +98,18 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('guide')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'guide'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Довідник</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('analytics')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'analytics'
@@ -114,46 +136,56 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-100 px-4 py-2 flex items-center justify-around shadow-lg">
+      {/* Mobile Bottom Navigation Bar (5 tabs) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-100 px-2 py-1.5 flex items-center justify-around shadow-lg">
         <button
           onClick={() => setActiveTab('calendar')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 transition-colors ${
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 transition-colors ${
             activeTab === 'calendar' ? 'text-emerald-700 font-bold' : 'text-slate-400 font-medium'
           }`}
         >
-          <Calendar className="w-5 h-5" />
-          <span className="text-[10px]">Календар</span>
+          <Calendar className="w-4 h-4" />
+          <span className="text-[9px]">Календар</span>
         </button>
 
         <button
           onClick={() => setActiveTab('reconciliation')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 transition-colors ${
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 transition-colors ${
             activeTab === 'reconciliation' ? 'text-emerald-700 font-bold' : 'text-slate-400 font-medium'
           }`}
         >
-          <Wallet className="w-5 h-5" />
-          <span className="text-[10px]">Звірка</span>
+          <Wallet className="w-4 h-4" />
+          <span className="text-[9px]">Звірка</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('guide')}
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 transition-colors ${
+            activeTab === 'guide' ? 'text-emerald-700 font-bold' : 'text-slate-400 font-medium'
+          }`}
+        >
+          <BookOpen className="w-4 h-4" />
+          <span className="text-[9px]">Довідник</span>
         </button>
 
         <button
           onClick={() => setActiveTab('analytics')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 transition-colors ${
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 transition-colors ${
             activeTab === 'analytics' ? 'text-emerald-700 font-bold' : 'text-slate-400 font-medium'
           }`}
         >
-          <BarChart3 className="w-5 h-5" />
-          <span className="text-[10px]">Аналітика</span>
+          <BarChart3 className="w-4 h-4" />
+          <span className="text-[9px]">Аналітика</span>
         </button>
 
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 transition-colors ${
+          className={`flex flex-col items-center gap-0.5 py-1 px-2 transition-colors ${
             activeTab === 'settings' ? 'text-emerald-700 font-bold' : 'text-slate-400 font-medium'
           }`}
         >
-          <Settings className="w-5 h-5" />
-          <span className="text-[10px]">Налаштування</span>
+          <Settings className="w-4 h-4" />
+          <span className="text-[9px]">Опції</span>
         </button>
       </nav>
     </>
