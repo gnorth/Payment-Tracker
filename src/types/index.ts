@@ -2,9 +2,9 @@ export interface PayoutCategory {
   id: string;
   name: string;
   shortName: string;
-  monthlyAmount: number; // e.g. 170000, 100000, 70000, 50000, 30000, 10000
-  dailyRate?: number; // e.g. 40000 for assault, 20000 for recovery
-  isDailyFixed?: boolean; // if true, dailyRate is added directly per day
+  monthlyAmount: number;
+  dailyRate?: number;
+  isDailyFixed?: boolean;
   color: string;
   badgeColor: string;
   countsTowards70k: boolean;
@@ -22,10 +22,17 @@ export interface DayRecord {
 
 export interface FinancialProfile {
   id?: number;
-  baseMonthlySalary: number; // Основне Грошове Забезпечення (ОГЗ)
-  rank?: string;
-  position?: string;
-  unit?: string;
+  baseMonthlySalary: number; // Обчислене або встановлене ОГЗ (грн)
+  rankId?: string; // ID звання
+  rankName?: string; // Назва звання
+  positionId?: string; // ID посади
+  positionName?: string; // Назва посади
+  tariffCategory?: number; // Тарифний розряд
+  yearsOfServiceId?: string; // ID вислуги
+  branchId?: string; // Рід військ (ОПС)
+  hasSecretAccess?: boolean; // Допуск до держтаємниці
+  unitName?: string; // Військова частина / підрозділ
+  manualSalaryOverride?: boolean; // Чи введене ОГЗ вручну
   darkMode?: boolean;
   customCategories?: PayoutCategory[];
 }

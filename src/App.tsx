@@ -125,8 +125,8 @@ export const App: React.FC = () => {
         currentMonth={currentMonth}
         dayRecords={dayRecords}
         baseMonthlySalary={profile.baseMonthlySalary}
-        rank={profile.rank}
-        position={profile.position}
+        rank={profile.rankName || ''}
+        position={profile.positionName || ''}
         categories={DEFAULT_CATEGORIES}
       />
     </div>
