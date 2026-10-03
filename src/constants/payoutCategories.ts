@@ -93,7 +93,7 @@ export const DEFAULT_CATEGORIES: PayoutCategory[] = [
     color: 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200',
     badgeColor: 'bg-slate-200 text-slate-800 border-slate-300',
     countsTowards70k: false,
-    description: 'Для військових поза зоною БД (не нараховується під час відпустки, відрядження, навчання та лікування)'
+    description: 'Для військових поза зоною БД (не нараховується під час відпустки та відрядження на навчання)'
   },
   {
     id: 'base_day',
@@ -113,27 +113,27 @@ export const DEFAULT_CATEGORIES: PayoutCategory[] = [
     color: 'bg-sky-50 border-sky-200 text-sky-900 hover:bg-sky-100',
     badgeColor: 'bg-sky-100 text-sky-800 border-sky-200',
     countsTowards70k: false,
-    description: 'Щорічна базова чи сімейна відпустка (винагорода 10к/30к/100к НЕ нараховується)'
+    description: 'Щорічна базова чи сімейна відпустка (додаткова винагорода 10к/30к/100к НЕ нараховується)'
   },
   {
     id: 'training',
-    name: 'Навчання / Курси (без винагороди)',
+    name: 'Навчання / Курси (НЦ/полігон)',
     shortName: 'Навчання',
     monthlyAmount: 0,
     color: 'bg-teal-50 border-teal-200 text-teal-900 hover:bg-teal-100',
     badgeColor: 'bg-teal-100 text-teal-800 border-teal-200',
     countsTowards70k: false,
-    description: 'Навчання у ЦНП / полігон / за кордоном (без додаткової винагороди)'
+    description: 'Відрядження на навчання до навчальних військових частин/полігонів (10к не нараховується)'
   },
   {
     id: 'business_trip',
-    name: 'Відрядження (небойове)',
+    name: 'Службове відрядження',
     shortName: 'Відрядження',
     monthlyAmount: 0,
     color: 'bg-indigo-50 border-indigo-200 text-indigo-900 hover:bg-indigo-100',
     badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     countsTowards70k: false,
-    description: 'Службове відрядження поза зоною бойових дій (додаткова винагорода 10к не нараховується)'
+    description: 'Виконання службових завдань за наказом (додаткова винагорода 10к зберігається)'
   },
   {
     id: 'treatment',
@@ -143,6 +143,6 @@ export const DEFAULT_CATEGORIES: PayoutCategory[] = [
     color: 'bg-blue-50 border-blue-200 text-blue-900 hover:bg-blue-100',
     badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
     countsTowards70k: false,
-    description: 'Стаціонарне чи амбулаторне лікування з приводу звичайного захворювання (винагорода 10к не нараховується)'
+    description: 'Стаціонарне чи амбулаторне лікування внаслідок хвороби/травми (10к та базове ОГЗ зберігаються)'
   }
 ];

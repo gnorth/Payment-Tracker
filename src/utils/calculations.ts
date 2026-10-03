@@ -31,18 +31,17 @@ export function getDailyRateForMonth(
 }
 
 /**
- * Categories that explicitly do NOT accrue additional rewards (10 000 UAH rear or standard bonuses)
- * In accordance with Decree #168 & MoD Order #260:
- * - Vacation (відпустка)
- * - Training outside combat areas (навчання)
- * - Business trip non-combat (відрядження)
- * - Treatment / Sick leave non-combat (лікування з приводу загальних захворювань)
+ * Categories that explicitly do NOT accrue the 10 000 UAH rear additional reward
+ * In accordance with Decree #168 & MoD Order #260 (amended by #232 / #566):
+ * - Vacation (відпустка будь-якого виду)
+ * - Training (відрядження на навчання до навчальних центрів/полігонів або курсанти)
+ *
+ * NOTE: Treatment (небойове лікування) and standard duty business trips (службові відрядження)
+ * RETAIN the 10 000 UAH reward and base salary according to official MoD rules.
  */
 export const NON_ACCRUAL_CATEGORIES = new Set([
   'vacation',
-  'training',
-  'business_trip',
-  'treatment'
+  'training'
 ]);
 
 /**
@@ -101,7 +100,7 @@ export function calculateMonthExpectedPayout(
         }
 
         if (NON_ACCRUAL_CATEGORIES.has(category.id)) {
-          // Explicitly 0 UAH additional reward for vacation, training, business_trip, treatment
+          // Explicitly 0 UAH additional reward for vacation, training
           if (!dayBreakdown[category.id]) {
             dayBreakdown[category.id] = {
               days: 0,
@@ -115,6 +114,18 @@ export function calculateMonthExpectedPayout(
           rearDaysCount += 1;
           rearTotalAmount += rearDailyRate;
           rawAdditionalRewards += rearDailyRate;
+        } else if (category.id === 'treatment' || category.id === 'business_trip') {
+          // Retains 10k pro-rata rate under MoD Order #260
+          rawAdditionalRewards += rearDailyRate;
+          if (!dayBreakdown[category.id]) {
+            dayBreakdown[category.id] = {
+              days: 0,
+              totalAmount: 0,
+              name: category.shortName
+            };
+          }
+          dayBreakdown[category.id].days += 1;
+          dayBreakdown[category.id].totalAmount += rearDailyRate;
         } else {
           // Combat or special duty category (170k, 100k, 70k, 50k, 30k, 40k, 20k, sick_100k)
           const rate = record.customRate ?? getDailyRateForMonth(category, yearMonth);

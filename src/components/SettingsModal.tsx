@@ -370,7 +370,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
           {hasRear10k && (
             <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-950 leading-relaxed font-medium">
-              💡 <strong>Правило нарахування:</strong> 10 000 грн нараховується щомісяця пропорційно дням служби. Винагорода <u>автоматично не нараховується</u> за дні, коли військовий перебуває у <strong>відпустці</strong>, <strong>на навчанні</strong>, у <strong>відрядженні</strong> або на <strong>лікуванні</strong> (0 грн/день).
+              💡 <strong>Правило нарахування (Наказ МОУ №260):</strong> 10 000 грн нараховується щомісяця пропорційно дням служби. Винагорода <u>не нараховується</u> за дні, коли військовий перебуває у <strong>відпустці</strong> або відряджений на <strong>навчання</strong> до навчальних центрів/полігонів (0 грн/день). Під час <strong>службових відряджень</strong> та <strong>лікування</strong> 10 000 грн зберігається.
             </div>
           )}
         </div>
