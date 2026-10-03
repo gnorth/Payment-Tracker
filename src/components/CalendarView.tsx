@@ -199,6 +199,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         return 'bg-sky-50 text-sky-800 border-sky-300 font-semibold';
       case 'training':
         return 'bg-teal-50 text-teal-800 border-teal-300 font-semibold';
+      case 'business_trip':
+        return 'bg-indigo-50 text-indigo-900 border-indigo-200 font-semibold';
+      case 'treatment':
+        return 'bg-blue-50 text-blue-900 border-blue-200 font-semibold';
       default:
         return 'bg-white text-slate-700 border-slate-100 hover:bg-slate-50';
     }
@@ -230,6 +234,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         return 'bg-sky-500';
       case 'training':
         return 'bg-teal-500';
+      case 'business_trip':
+        return 'bg-indigo-500';
+      case 'treatment':
+        return 'bg-blue-500';
       default:
         return null;
     }

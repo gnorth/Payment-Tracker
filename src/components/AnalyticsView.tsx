@@ -9,6 +9,7 @@ interface AnalyticsViewProps {
   dayRecords: DayRecord[];
   transactions: PaymentTransaction[];
   baseMonthlySalary: number;
+  hasRear10k?: boolean;
   categories?: PayoutCategory[];
 }
 
@@ -16,6 +17,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   dayRecords,
   transactions,
   baseMonthlySalary,
+  hasRear10k = false,
   categories = DEFAULT_CATEGORIES
 }) => {
   const months: string[] = [];
@@ -30,7 +32,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       yearMonth,
       dayRecords,
       categories,
-      baseMonthlySalary
+      baseMonthlySalary,
+      hasRear10k
     );
     const monthTx = transactions.filter((t) => t.targetMonth === yearMonth);
     const received = monthTx.reduce((sum, t) => sum + t.amount, 0);

@@ -10,6 +10,7 @@ interface UsePayoutCalculationsProps {
   dayRecords: DayRecord[];
   transactions: PaymentTransaction[];
   baseMonthlySalary: number;
+  hasRear10k?: boolean;
   categories?: PayoutCategory[];
 }
 
@@ -18,6 +19,7 @@ export function usePayoutCalculations({
   dayRecords,
   transactions,
   baseMonthlySalary,
+  hasRear10k = false,
   categories = DEFAULT_CATEGORIES
 }: UsePayoutCalculationsProps) {
   const monthCalculation = useMemo(() => {
@@ -25,9 +27,10 @@ export function usePayoutCalculations({
       currentMonth,
       dayRecords,
       categories,
-      baseMonthlySalary
+      baseMonthlySalary,
+      hasRear10k
     );
-  }, [currentMonth, dayRecords, categories, baseMonthlySalary]);
+  }, [currentMonth, dayRecords, categories, baseMonthlySalary, hasRear10k]);
 
   const milestone70k = useMemo(() => {
     return calculate70kMilestone(dayRecords, categories);

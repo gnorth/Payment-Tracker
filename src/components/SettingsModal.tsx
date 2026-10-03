@@ -43,6 +43,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [yearsOfServiceId, setYearsOfServiceId] = useState<string>(profile.yearsOfServiceId || '1_5');
   const [branchId, setBranchId] = useState<string>(profile.branchId || 'ground');
   const [hasSecretAccess, setHasSecretAccess] = useState<boolean>(profile.hasSecretAccess || false);
+  const [hasRear10k, setHasRear10k] = useState<boolean>(profile.hasRear10k || false);
   const [unitName, setUnitName] = useState<string>(profile.unitName || '');
 
   // Manual override state
@@ -87,6 +88,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       yearsOfServiceId,
       branchId,
       hasSecretAccess,
+      hasRear10k,
       unitName,
       manualSalaryOverride: manualOverride
     };
@@ -108,6 +110,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         yearsOfServiceId,
         branchId,
         hasSecretAccess,
+        hasRear10k,
         unitName,
         manualSalaryOverride: manualOverride
       },
@@ -340,6 +343,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <span className="text-[10px] text-slate-400 block mt-0.5">
                 Якщо ввести точну суму, додаток буде використовувати її як щомісячну базу
               </span>
+            </div>
+          )}
+        </div>
+
+        {/* Rear 10,000 UAH additional reward setting */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-bold text-slate-900">
+                Додаткова винагорода 10 000 грн (поза зоною БД / тил)
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Для підрозділів, які не беруть безпосередньої участі в бойових діях (постанова КМУ №168)
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={hasRear10k}
+                onChange={(e) => setHasRear10k(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+          {hasRear10k && (
+            <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-950 leading-relaxed font-medium">
+              💡 <strong>Правило нарахування:</strong> 10 000 грн нараховується щомісяця пропорційно дням служби. Винагорода <u>автоматично не нараховується</u> за дні, коли військовий перебуває у <strong>відпустці</strong>, <strong>на навчанні</strong>, у <strong>відрядженні</strong> або на <strong>лікуванні</strong> (0 грн/день).
             </div>
           )}
         </div>

@@ -31,6 +31,7 @@ export interface FinancialProfile {
   yearsOfServiceId?: string; // ID вислуги
   branchId?: string; // Рід військ (ОПС)
   hasSecretAccess?: boolean; // Допуск до держтаємниці
+  hasRear10k?: boolean; // Додаткова винагорода 10 000 грн (поза зоною БД / тил)
   unitName?: string; // Військова частина / підрозділ
   manualSalaryOverride?: boolean; // Чи введене ОГЗ вручну
   darkMode?: boolean;

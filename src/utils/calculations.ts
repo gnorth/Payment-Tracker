@@ -31,13 +31,29 @@ export function getDailyRateForMonth(
 }
 
 /**
+ * Categories that explicitly do NOT accrue additional rewards (10 000 UAH rear or standard bonuses)
+ * In accordance with Decree #168 & MoD Order #260:
+ * - Vacation (відпустка)
+ * - Training outside combat areas (навчання)
+ * - Business trip non-combat (відрядження)
+ * - Treatment / Sick leave non-combat (лікування з приводу загальних захворювань)
+ */
+export const NON_ACCRUAL_CATEGORIES = new Set([
+  'vacation',
+  'training',
+  'business_trip',
+  'treatment'
+]);
+
+/**
  * Calculates expected additional reward for a given month based on day records
  */
 export function calculateMonthExpectedPayout(
   yearMonth: string, // "YYYY-MM"
   dayRecords: DayRecord[],
   categories: PayoutCategory[] = DEFAULT_CATEGORIES,
-  baseMonthlySalary: number = 20100
+  baseMonthlySalary: number = 20100,
+  hasRear10k: boolean = false
 ): {
   baseSalary: number;
   additionalRewards: number;
@@ -53,31 +69,106 @@ export function calculateMonthExpectedPayout(
   let rawAdditionalRewards = 0;
   let combatDaysCount = 0;
 
+  const [year, month] = yearMonth.split('-').map(Number);
+  const daysInMonth = getDaysInMonth(new Date(year, month - 1, 1));
+  const rearDailyRate = 10000 / daysInMonth;
+
   // Filter records for this target month
   const monthRecords = dayRecords.filter((record) => record.date.startsWith(yearMonth));
+  const recordByDate = new Map<string, DayRecord>();
+  monthRecords.forEach((r) => recordByDate.set(r.date, r));
 
-  monthRecords.forEach((record) => {
-    const category = categoryMap.get(record.typeId);
-    if (!category) return;
+  if (hasRear10k) {
+    // Serviceman in rear/non-combat unit entitled to 10 000 UAH / mo pro-rata
+    let rearDaysCount = 0;
+    let rearTotalAmount = 0;
 
-    if (category.countsTowards70k) {
-      combatDaysCount += 1;
+    for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+      const dayStr = `${yearMonth}-${String(dayNum).padStart(2, '0')}`;
+      const record = recordByDate.get(dayStr);
+
+      if (!record) {
+        // Normal service day in rear unit
+        rearDaysCount += 1;
+        rearTotalAmount += rearDailyRate;
+        rawAdditionalRewards += rearDailyRate;
+      } else {
+        const category = categoryMap.get(record.typeId);
+        if (!category) continue;
+
+        if (category.countsTowards70k) {
+          combatDaysCount += 1;
+        }
+
+        if (NON_ACCRUAL_CATEGORIES.has(category.id)) {
+          // Explicitly 0 UAH additional reward for vacation, training, business_trip, treatment
+          if (!dayBreakdown[category.id]) {
+            dayBreakdown[category.id] = {
+              days: 0,
+              totalAmount: 0,
+              name: category.shortName
+            };
+          }
+          dayBreakdown[category.id].days += 1;
+        } else if (category.id === 'rear_10k' || category.id === 'base_day') {
+          // Standard duty day in rear
+          rearDaysCount += 1;
+          rearTotalAmount += rearDailyRate;
+          rawAdditionalRewards += rearDailyRate;
+        } else {
+          // Combat or special duty category (170k, 100k, 70k, 50k, 30k, 40k, 20k, sick_100k)
+          const rate = record.customRate ?? getDailyRateForMonth(category, yearMonth);
+          rawAdditionalRewards += rate;
+
+          if (!dayBreakdown[category.id]) {
+            dayBreakdown[category.id] = {
+              days: 0,
+              totalAmount: 0,
+              name: category.shortName
+            };
+          }
+          dayBreakdown[category.id].days += 1;
+          dayBreakdown[category.id].totalAmount += rate;
+        }
+      }
     }
 
-    const rate = record.customRate ?? getDailyRateForMonth(category, yearMonth);
-    rawAdditionalRewards += rate;
-
-    if (!dayBreakdown[category.id]) {
-      dayBreakdown[category.id] = {
-        days: 0,
-        totalAmount: 0,
-        name: category.shortName
+    if (rearDaysCount > 0) {
+      dayBreakdown['rear_10k'] = {
+        days: rearDaysCount,
+        totalAmount: rearTotalAmount,
+        name: 'Тил 10к'
       };
     }
+  } else {
+    // Standard combat/manual day-by-day tracking mode
+    monthRecords.forEach((record) => {
+      const category = categoryMap.get(record.typeId);
+      if (!category) return;
 
-    dayBreakdown[category.id].days += 1;
-    dayBreakdown[category.id].totalAmount += rate;
-  });
+      if (category.countsTowards70k) {
+        combatDaysCount += 1;
+      }
+
+      // If category is an excluded non-accrual type (vacation, training, business_trip, treatment), rate is strictly 0
+      const rate = NON_ACCRUAL_CATEGORIES.has(category.id)
+        ? 0
+        : (record.customRate ?? getDailyRateForMonth(category, yearMonth));
+
+      rawAdditionalRewards += rate;
+
+      if (!dayBreakdown[category.id]) {
+        dayBreakdown[category.id] = {
+          days: 0,
+          totalAmount: 0,
+          name: category.shortName
+        };
+      }
+
+      dayBreakdown[category.id].days += 1;
+      dayBreakdown[category.id].totalAmount += rate;
+    });
+  }
 
   // Apply Ministry of Defence 2026 Monthly combat payout cap (460 000 грн)
   const isCapped = rawAdditionalRewards > MAX_MONTHLY_COMBAT_PAYOUT;

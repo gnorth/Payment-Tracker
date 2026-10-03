@@ -13,6 +13,7 @@ interface ReportGeneratorModalProps {
   baseMonthlySalary: number;
   rank?: string;
   position?: string;
+  hasRear10k?: boolean;
   categories?: PayoutCategory[];
 }
 
@@ -24,6 +25,7 @@ export const ReportGeneratorModal: React.FC<ReportGeneratorModalProps> = ({
   baseMonthlySalary,
   rank = '',
   position = '',
+  hasRear10k = false,
   categories = DEFAULT_CATEGORIES
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
@@ -34,7 +36,8 @@ export const ReportGeneratorModal: React.FC<ReportGeneratorModalProps> = ({
     currentMonth,
     dayRecords,
     categories,
-    baseMonthlySalary
+    baseMonthlySalary,
+    hasRear10k
   );
 
   const [y, m] = currentMonth.split('-').map(Number);

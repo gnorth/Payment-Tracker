@@ -42,6 +42,7 @@ export const App: React.FC = () => {
     dayRecords,
     transactions,
     baseMonthlySalary: profile.baseMonthlySalary,
+    hasRear10k: profile.hasRear10k,
     categories: DEFAULT_CATEGORIES
   });
 
@@ -103,6 +104,7 @@ export const App: React.FC = () => {
             dayRecords={dayRecords}
             transactions={transactions}
             baseMonthlySalary={profile.baseMonthlySalary}
+            hasRear10k={profile.hasRear10k}
             categories={DEFAULT_CATEGORIES}
           />
         )}
@@ -127,6 +129,7 @@ export const App: React.FC = () => {
         baseMonthlySalary={profile.baseMonthlySalary}
         rank={profile.rankName || ''}
         position={profile.positionName || ''}
+        hasRear10k={profile.hasRear10k}
         categories={DEFAULT_CATEGORIES}
       />
     </div>
